@@ -57,7 +57,7 @@
 [Executioner]
   type = Eigenvalue
   free_power_iterations = 4
-  initial_eigenvalue = 1
+  initial_eigenvalue = 0.6
 
   solve_type = 'PJFNK'
   petsc_options_iname = '-pc_type -pc_hypre_type -pc_hypre_boomeramg_strong_threshold -pc_hypre_boomeramg_agg_nl -pc_hypre_boomeramg_agg_num_paths -pc_hypre_boomeramg_max_levels -pc_hypre_boomeramg_coarsen_type -pc_hypre_boomeramg_interp_type -pc_hypre_boomeramg_P_max -pc_hypre_boomeramg_truncfactor -ksp_gmres_restart'

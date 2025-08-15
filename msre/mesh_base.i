@@ -262,32 +262,27 @@ inch = 2.54e-2
     clear_stitched_boundary_ids = false
     verbose_stitching = true
   []
-  # Rename salt blocks
-  [rename_fuel]
-    type = RenameBlockGenerator
-    input = stitch_2
-    old_block = '10 11'
-    new_block = '3 4'
-  []
-  [remove_thimble]
+  # Remove salt and thimble blocks
+  [delete_fuel]
     type = BlockDeletionGenerator
-    input = rename_fuel
-    block = '13 14'
+    input = stitch_2
+    block = '10 11 13 14 15'
+    new_boundary = 101
   []
-#  # Extrude to 3D
-#  [extrude]
-#    type = AdvancedExtruderGenerator
-#    input = remove_thimble
-#    heights = '1.70027'
-#    num_layers = '10'
-#    direction = '0 0 1'
-##    bottom_boundary = 5
-##    top_boundary = 6
-#  []
-#  [transform_up]
-#    type = TransformGenerator
-#    input = extrude
-#    transform = TRANSLATE
-#    vector_value = '0 0 0.1875'
-#  []
+  # Extrude to 3D
+  [extrude]
+    type = AdvancedExtruderGenerator
+    input = delete_fuel
+    heights = '1.70027'
+    num_layers = '10'
+    direction = '0 0 1'
+#    bottom_boundary = 5
+#    top_boundary = 6
+  []
+  [transform_up]
+    type = TransformGenerator
+    input = extrude
+    transform = TRANSLATE
+    vector_value = '0 0 0.1875'
+  []
 []

@@ -11,9 +11,9 @@ inch = 2.54e-2
     ring_radii = '${radius}'
     ring_intervals = '1'
     ring_block_ids = '11'
-    background_intervals = '1'
+    background_intervals = '2'
     square_size = '${fparse inch * sqrt(2 * (0.6 ^ 2))}'
-    preserve_volumes = true
+    preserve_volumes = false
     quad_element_type = QUAD8
     tri_element_type = TRI6
   []
@@ -48,8 +48,8 @@ inch = 2.54e-2
     dim = 2
     dx = '${fparse 0.4 * inch} ${fparse 0.4 * inch} ${fparse 0.4 * inch}'
     dy = '${fparse 0.8 * inch}'
-    ix = '1 2 1'
-    iy = '2'
+    ix = '2 2 2'
+    iy = '4'
     subdomain_id = '0 10 0'
   []
   [second_order]
@@ -77,9 +77,10 @@ inch = 2.54e-2
   [square_cell]
     type = PolygonConcentricCircleMeshGenerator
     num_sides = 4
-    num_sectors_per_side = '2 2 2 2'
-    background_intervals = 1
-    polygon_size = ${fparse inch * 0.4}
+    num_sectors_per_side = '4 4 4 4'
+    background_intervals = 2
+    polygon_size = ${fparse 2.54e-2 * 0.4}
+    quad_element_type = QUAD8
     tri_element_type = TRI6
   []
   [top]
@@ -232,11 +233,11 @@ inch = 2.54e-2
     type = CartesianConcentricCircleAdaptiveBoundaryMeshGenerator
     num_sectors_per_side = '8 8 8 8'
     ring_radii = '${fparse inch-0.1651e-2} ${inch} 3.1992e-2'
-    ring_intervals = '1 1 1'
+    ring_intervals = '1 1 2'
     ring_block_ids = '13 14 15'
     background_intervals = '1'
     square_size = '${fparse inch * sqrt(2) * 2}'
-    preserve_volumes = true
+    preserve_volumes = false
     quad_element_type = QUAD8
     tri_element_type = TRI6
   []
@@ -254,6 +255,7 @@ inch = 2.54e-2
     refine_boundary = false
     refine_holes = false
     tri_element_type = TRI6
+    use_auto_area_func = true
   []
   [stitch_2]
     type = StitchedMeshGenerator
