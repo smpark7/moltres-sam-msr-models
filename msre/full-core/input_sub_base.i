@@ -26,13 +26,11 @@
     type = PBOneDFluidComponent
     eos = eos
     orientation = '0 0 1'
-    f = 0
   []
   [upper_plenum]
     type = PBOneDFluidComponent
     eos = eos
     orientation = '0 0 1'
-    f = 0
   []
   [lower_branch]
     type = PBBranch
@@ -60,12 +58,10 @@
   [pipe_input]
     type = PBOneDFluidComponentParameters
     eos = eos
-    f = 0
   []
   [control_input]
     type = PBOneDFluidComponentParameters
     eos = eos
-    f = 0
   []
 []
 
