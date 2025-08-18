@@ -136,9 +136,16 @@ inch = 2.54e-2
     input = rename_blocks
     boundary_names = '1 10 11 12 13 10000 10002 10003 10004 10006'
   []
-  [new_bounds]
-    type = SideSetsFromNormalsGenerator
+  [fuel_bounds]
+    type = SideSetsBetweenSubdomainsGenerator
     input = delete_bounds
+    new_boundary = 101
+    paired_block = '10 11'
+    primary_block = '2'
+  []
+  [new_bounds_1]
+    type = SideSetsFromNormalsGenerator
+    input = fuel_bounds
     new_boundary = 'left top right bottom'
     normals = '-1 0 0 0 1 0 1 0 0 0 -1 0'
     fixed_normal = true
@@ -160,7 +167,7 @@ inch = 2.54e-2
   # Lattice
   [pattern]
     type = PatternedMeshGenerator
-    inputs = 'new_bounds new_bounds_2'
+    inputs = 'new_bounds_1 new_bounds_2'
     pattern = '0 1 0 1 0 1 0 1 0 1;
                1 0 1 0 1 0 1 0 1 0;
                0 1 0 1 0 1 0 1 0 1;
