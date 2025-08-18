@@ -8,7 +8,7 @@
 [Variables]
   [T_solid]
     family = LAGRANGE
-    order = FIRST
+    order = SECOND
     initial_condition = 900
     scaling = 1e-6
   []
@@ -17,13 +17,13 @@
 [AuxVariables]
   [h_wall]
     family = LAGRANGE
-    order = FIRST
+    order = SECOND
     block = '0 2'
     initial_condition = 1e3
   []
   [T_fluid]
     family = LAGRANGE
-    order = FIRST
+    order = SECOND
     block = '0 2'
     initial_condition = 900
   []
@@ -81,8 +81,8 @@
 [Executioner]
 #  type = Steady
   type = Transient
-  dt = 1
-  end_time = 100
+  dt = 0.1
+  end_time = 10
 
 #  petsc_options_iname = '-ksp_gmres_restart'
 #  petsc_options_value = '100'

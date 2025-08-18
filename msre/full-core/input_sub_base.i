@@ -93,8 +93,8 @@
 [Executioner]
 #  type = Steady
   type = Transient
-  dt = 1
-  end_time = 100
+  dt = 0.1
+  end_time = 10
 
   petsc_options_iname = '-ksp_gmres_restart'
   petsc_options_value = '100'
@@ -115,27 +115,27 @@
 [Postprocessors]
   [outlet_temperature]
     type = ComponentBoundaryVariableValue
-    input = lower_plenum(out)
+    input = upper_plenum(out)
     variable = temperature
   []
   [outlet_velocity]
     type = ComponentBoundaryVariableValue
-    input = lower_plenum(out)
+    input = upper_plenum(out)
     variable = velocity
   []
   [outlet_pressure]
     type = ComponentBoundaryVariableValue
-    input = lower_plenum(out)
+    input = upper_plenum(out)
     variable = pressure
   []
   [control_temperature]
     type = ComponentBoundaryVariableValue
-    input = pipe_44(out)
+    input = control_0(out)
     variable = temperature
   []
   [control_velocity]
     type = ComponentBoundaryVariableValue
-    input = pipe_44(out)
+    input = control_0(out)
     variable = velocity
   []
   [pipe_43_temperature]

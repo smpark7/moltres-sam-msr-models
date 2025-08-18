@@ -38,7 +38,7 @@ def main(mesh_base_file='mesh_base.i', mesh_file='mesh.i', num_nodes=21):
     extrude = moosetree.find(
         root, func=lambda n: n.fullpath == '/Mesh/extrude')
     extrude['heights'] = f"'{core_height}'"
-    extrude['num_layers'] = 5
+    extrude['num_layers'] = 34
 #    mesh_num = int(np.ceil(core_height / axial_mesh_size))
 #    extrude['num_layers'] = f"'{mesh_num}'"
 #    extrude['heights'] = f"'{thimble_tip_position} {thimble_length}'"
