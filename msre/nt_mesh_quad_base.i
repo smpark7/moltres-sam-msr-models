@@ -340,26 +340,27 @@ inch = 2.54e-2
     type = BlockDeletionGenerator
     input = stitch_4
     block = '13 14'
+    new_boundary = 101
   []
-#  # Extrude to 3D
-#  [extrude]
-#    type = AdvancedExtruderGenerator
-#    input = remove_thimble
-#    heights = '1.70027'
-#    num_layers = '10'
-#    direction = '0 0 1'
-##    bottom_boundary = 5
-##    top_boundary = 6
-#  []
-#  [transform_up]
-#    type = TransformGenerator
-#    input = extrude
-#    transform = TRANSLATE
-#    vector_value = '0 0 0.1875'
-#  []
-#  [cleanup]
-#    type = BoundaryDeletionGenerator
-#    input = transform_up
-#    boundary_names = '5 7'
-#  []
+  # Extrude to 3D
+  [extrude]
+    type = AdvancedExtruderGenerator
+    input = remove_thimble
+    heights = '1.70027'
+    num_layers = '10'
+    direction = '0 0 1'
+#    bottom_boundary = 5
+#    top_boundary = 6
+  []
+  [transform_up]
+    type = TransformGenerator
+    input = extrude
+    transform = TRANSLATE
+    vector_value = '0 0 0.1875'
+  []
+  [cleanup]
+    type = BoundaryDeletionGenerator
+    input = transform_up
+    boundary_names = '5 7'
+  []
 []

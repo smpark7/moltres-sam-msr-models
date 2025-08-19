@@ -56,7 +56,7 @@ def main(mesh_base_file='nt_mesh_quad_base.i',
     # Label channel boundary IDs
     mesh = moosetree.find(
         root, func=lambda n: n.fullpath == '/Mesh')
-    curr_name = 'transform_up'
+    curr_name = 'cleanup'
     for i in range(nx-1):
         for j in range(nx-1):
             if i == center_idx[0] and j == center_idx[0]:
