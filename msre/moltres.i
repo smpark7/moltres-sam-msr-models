@@ -16,7 +16,7 @@
 [Mesh]
   [graphite]
     type = FileMeshGenerator
-    file = 'nt_mesh_fine_base_in.e'
+    file = 'nt_mesh_quad_base_in.e'
   []
 []
 
@@ -24,8 +24,8 @@
   family = LAGRANGE
   order = SECOND
   var_name_base = group
-  fission_blocks = '3 4 15'
-  pre_blocks = '3 4 15'
+  fission_blocks = '10 11 15'
+  pre_blocks = '10 11 15'
   create_temperature_var = false
   eigen = true
 []
@@ -47,7 +47,7 @@
     type = MoltresJsonMaterial
     base_file = 'xsdata/xsdata-meter.json'
     material_key = 'fuel'
-    block = '3 4 15'
+    block = '10 11 15'
     interp_type = 'none'
     prop_names = 'k cp rho'
     prop_values = '10.1 2386 2327.5'
@@ -65,13 +65,13 @@
   line_search = 'none'
 
 #  nl_rel_tol = 1e-9
-  nl_abs_tol = 1e-12
+  nl_abs_tol = 1e-10
 []
 
 [Postprocessors]
   [bnorm]
     type = ElmIntegTotFissNtsPostprocessor
-    block = '3 4 15'
+    block = '10 11 15'
     execute_on = linear
   []
   [eigenvalue]

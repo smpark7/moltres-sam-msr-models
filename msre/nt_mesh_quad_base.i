@@ -49,7 +49,7 @@ inch = 2.54e-2
     dx = '${fparse 0.4 * inch} ${fparse 0.4 * inch} ${fparse 0.4 * inch}'
     dy = '${fparse 0.8 * inch}'
     ix = '2 2 2'
-    iy = '4'
+    iy = '2'
     subdomain_id = '0 10 0'
   []
   [second_order]
@@ -77,9 +77,9 @@ inch = 2.54e-2
   [square_cell]
     type = PolygonConcentricCircleMeshGenerator
     num_sides = 4
-    num_sectors_per_side = '4 4 4 4'
+    num_sectors_per_side = '2 2 2 2'
     background_intervals = 2
-    polygon_size = ${fparse 2.54e-2 * 0.4}
+    polygon_size = ${fparse inch * 0.4}
     quad_element_type = QUAD8
     tri_element_type = TRI6
   []
@@ -218,24 +218,6 @@ inch = 2.54e-2
     block = '3 4'
     new_boundary = 1001
   []
-#  [line_block]
-#    type = LowerDBlockFromSidesetGenerator
-#    input = delete_center
-#    sidesets = 1001
-#    new_block_id = 1001
-#  []
-#  [isolate_line]
-#    type = BlockDeletionGenerator
-#    input = line_block
-#    block = '1 2 10 11'
-#    delete_exteriors = false
-#  []
-#  # Reduce to first order to avoid bug with XYDelaunay on EDGE3
-#  [first_order]
-#    type = ElementOrderConversionGenerator
-#    input = isolate_line
-#    conversion_type = FIRST_ORDER
-#  []
   [first_order]
     type = ElementOrderConversionGenerator
     input = delete_center
@@ -255,7 +237,7 @@ inch = 2.54e-2
   []
   [control_cell]
     type = CartesianConcentricCircleAdaptiveBoundaryMeshGenerator
-    num_sectors_per_side = '14 14 14 14'
+    num_sectors_per_side = '12 12 12 12'
     ring_radii = '${fparse inch-0.1651e-2} ${inch} 3.1992e-2'
     ring_intervals = '1 1 2'
     ring_block_ids = '13 14 15'
@@ -347,16 +329,16 @@ inch = 2.54e-2
     clear_stitched_boundary_ids = true
     verbose_stitching = true
   []
-  # Rename salt blocks
-  [rename_fuel]
-    type = RenameBlockGenerator
-    input = stitch_4
-    old_block = '10 11'
-    new_block = '3 4'
-  []
+#  # Rename salt blocks
+#  [rename_fuel]
+#    type = RenameBlockGenerator
+#    input = stitch_4
+#    old_block = '10 11'
+#    new_block = '3 4'
+#  []
   [remove_thimble]
     type = BlockDeletionGenerator
-    input = rename_fuel
+    input = stitch_4
     block = '13 14'
   []
 #  # Extrude to 3D
@@ -364,7 +346,7 @@ inch = 2.54e-2
 #    type = AdvancedExtruderGenerator
 #    input = remove_thimble
 #    heights = '1.70027'
-#    num_layers = '1'
+#    num_layers = '10'
 #    direction = '0 0 1'
 ##    bottom_boundary = 5
 ##    top_boundary = 6

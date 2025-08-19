@@ -1,14 +1,40 @@
+[GlobalParams]
+  num_groups = 2
+  num_precursor_groups = 6
+  use_exp_form = false
+  group_fluxes = 'group1 group2'
+  temperature = 922
+  sss2_input = true
+  account_delayed = false
+[]
+
+[Problem]
+  type = EigenProblem
+  bx_norm = bnorm
+[]
+
 [Mesh]
   [graphite]
     type = FileMeshGenerator
-    file = 'mesh_in.e'
+    file = 'nt_mesh_quad_base_in.e'
   []
+[]
+
+[Nt]
+  family = LAGRANGE
+  order = SECOND
+  var_name_base = group
+  fission_blocks = '10 11 15'
+  pre_blocks = '10 11 15'
+  create_temperature_var = false
+  eigen = true
 []
 
 [Variables]
   [T_solid]
     family = LAGRANGE
     order = FIRST
+    block = '0 1 2'
     initial_condition = 900
     scaling = 1e-6
   []
@@ -18,13 +44,13 @@
   [h_wall]
     family = LAGRANGE
     order = FIRST
-    block = '0 2'
+    block = '10 11 15'
     initial_condition = 1e3
   []
   [T_fluid]
     family = LAGRANGE
     order = FIRST
-    block = '0 2'
+    block = '10 11 15'
     initial_condition = 900
   []
 []
@@ -33,18 +59,37 @@
   [diffusion]
     type = MatDiffusion
     variable = T_solid
+    block = '0 1 2'
     diffusivity = 'k'
   []
   [source]
     type = HeatSource
     variable = T_solid
+    block = '0 1 2'
     function = graphite_heat_func
   []
 []
 
 [Materials]
   [graphite]
-    type = GenericConstantMaterial
+    type = MoltresJsonMaterial
+    base_file = 'xsdata/xsdata-meter.json'
+    material_key = 'graphite'
+    block = '0 1 2'
+    interp_type = 'none'
+    prop_names = 'k cp rho'
+    prop_values = '154.797 1758.46 1860'
+    temperature = T_solid
+  []
+  [salt]
+    type = MoltresJsonMaterial
+    base_file = 'xsdata/xsdata-meter.json'
+    material_key = 'fuel'
+    block = '10 11 15'
+    interp_type = 'none'
+    prop_names = 'k cp rho'
+    prop_values = '10.1 2386 2327.5'
+    temperature = T_fluid
   []
 []
 
@@ -79,30 +124,20 @@
 []
 
 [Executioner]
-#  type = Steady
-  type = Transient
-  dt = 1
-  end_time = 100
+  type = Eigenvalue
+  free_power_iterations = 4
+  initial_eigenvalue = 1
 
-#  petsc_options_iname = '-ksp_gmres_restart'
-#  petsc_options_value = '100'
+  solve_type = 'PJFNK'
+  petsc_options_iname = '-pc_type -pc_hypre_type -pc_hypre_boomeramg_strong_threshold -pc_hypre_boomeramg_agg_nl -pc_hypre_boomeramg_agg_num_paths -pc_hypre_boomeramg_max_levels -pc_hypre_boomeramg_coarsen_type -pc_hypre_boomeramg_interp_type -pc_hypre_boomeramg_P_max -pc_hypre_boomeramg_truncfactor -ksp_gmres_restart'
+  petsc_options_value = 'hypre boomeramg 0.7 4 5 25 HMIS ext+i 2 0.3 200'
+  line_search = 'none'
 
-  nl_rel_tol = 1e-9
-  nl_abs_tol = 1e-8
-  nl_max_its = 20
-
-  l_tol = 1e-4
-  l_max_its = 100
+  nl_abs_tol = 1e-10
 
   fixed_point_max_its = 20
   fixed_point_rel_tol = 1e-9
   fixed_point_abs_tol = 1e-8
-
-  [Quadrature]
-    type = TRAP
-    order = FIRST
-  []
-  transformed_variables = 'T_solid'
 []
 
 [MultiApps]
@@ -112,7 +147,6 @@
     positions = '0 0 0'
     input_files = 'input_sub.i'
     execute_on = timestep_end
-#    max_procs_per_app = 32
   []
 []
 
@@ -156,9 +190,31 @@
 []
 
 [Postprocessors]
+  [bnorm]
+    type = ElmIntegTotFissNtsPostprocessor
+    block = '10 11 15'
+    execute_on = linear
+  []
+  [eigenvalue]
+    type = VectorPostprocessorComponent
+    vectorpostprocessor = eigenvalues
+    vector_name = eigen_values_real
+    index = 0
+  []
+  [max_temp]
+    type = NodalExtremeValue
+    variable = T_solid
+    block = '0 1 2'
+    value_type = min
+  []
 []
 
 [VectorPostprocessors]
+  [eigenvalues]
+    type = Eigenvalues
+    inverse_eigenvalue = true
+    outputs = console
+  []
 []
 
 [Outputs]
@@ -172,5 +228,6 @@
     use_displaced = true
     execute_on = 'initial timestep_end'
     sequence = false
+    discontinuous = true
   []
 []

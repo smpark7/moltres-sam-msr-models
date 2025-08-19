@@ -30,7 +30,8 @@ pitch = np.sqrt(2) * inch
 axial_mesh_size = 5e-2
 
 
-def main(mesh_base_file='mesh_base.i', mesh_file='mesh.i', num_nodes=21):
+def main(mesh_base_file='nt_mesh_quad_base.i',
+         mesh_file='nt_mesh_quad.i'):
     # Read base mesh file
     root = pyhit.load(mesh_base_file)
 
@@ -83,7 +84,7 @@ def main(mesh_base_file='mesh_base.i', mesh_file='mesh.i', num_nodes=21):
 if __name__ == "__main__":
     if len(argv) == 1:
         main()
-    elif len(argv) == 2:
-        main(num_nodes=argv[1])
-    elif len(argv) == 4:
-        main(mesh_base_file=argv[1], mesh_file=argv[2], num_nodes=argv[3])
+#    elif len(argv) == 2:
+#        main(num_nodes=argv[1])
+#    elif len(argv) == 4:
+#        main(mesh_base_file=argv[1], mesh_file=argv[2], num_nodes=argv[3])

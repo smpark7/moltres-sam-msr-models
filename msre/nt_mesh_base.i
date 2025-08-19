@@ -153,7 +153,7 @@ inch = 2.54e-2
   # Rotated unit cell
   [rotate_cell]
     type = TransformGenerator
-    input = delete_bounds
+    input = fuel_bounds
     transform = ROTATE
     vector_value = '90 0 0'
   []
@@ -221,7 +221,7 @@ inch = 2.54e-2
     type = LowerDBlockFromSidesetGenerator
     input = delete_center
     sidesets = 1001
-    new_block_id = 101
+    new_block_id = 1001
   []
   [isolate_line]
     type = BlockDeletionGenerator
@@ -251,12 +251,13 @@ inch = 2.54e-2
     type = BlockDeletionGenerator
     input = control_cell
     block = 4
+    new_boundary = 101
   []
   [xydelaunay]
     type = XYDelaunayGenerator
     boundary = first_order
     holes = delete_background
-    hole_boundaries = 3
+#    hole_boundaries = 102
     stitch_holes = true
     refine_boundary = false
     refine_holes = false
@@ -265,7 +266,7 @@ inch = 2.54e-2
   [stitch_2]
     type = StitchedMeshGenerator
     inputs = 'delete_center xydelaunay'
-    stitch_boundaries_pairs = '1001 6'
+    stitch_boundaries_pairs = '1001 102'
     clear_stitched_boundary_ids = false
     verbose_stitching = true
   []
@@ -281,19 +282,26 @@ inch = 2.54e-2
     input = rename_fuel
     block = '13 14'
   []
-#  # Extrude to 3D
-#  [extrude]
-#    type = AdvancedExtruderGenerator
-#    input = remove_thimble
-#    heights = '1.70027'
-#    num_layers = '10'
-#    direction = '0 0 1'
-##    bottom_boundary = 5
-##    top_boundary = 6
+  # Extrude to 3D
+  [extrude]
+    type = AdvancedExtruderGenerator
+    input = remove_thimble
+    heights = '1.70027'
+    num_layers = '4'
+    direction = '0 0 1'
+#    bottom_boundary = 5
+#    top_boundary = 6
+  []
+#  [wall_blocks_1]
+#    type = LowerDBlockFromSidesetGenerator
+#    input = extrude
+#    sidesets = 101
+#    new_block_id = 101
+#    new_block_name = wall
 #  []
 #  [transform_up]
 #    type = TransformGenerator
-#    input = extrude
+#    input = wall_blocks_1
 #    transform = TRANSLATE
 #    vector_value = '0 0 0.1875'
 #  []
