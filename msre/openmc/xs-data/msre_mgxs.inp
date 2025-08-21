@@ -1,0 +1,28 @@
+[TITLE]
+  msre.json
+
+[MAT]
+  7
+  ctrlrod air fuel graphite inor basket lower_head
+
+[BRANCH]
+  14
+  ctrlrod 900 3 1 101 1
+  air 900 3 1 102 1
+  fuel 900 3 1 103 1
+  graphite 900 3 1 104 1
+  inor 900 3 1 105 1
+  basket 900 3 1 106 1
+  lower_head 900 3 1 107 1
+  ctrlrod 1200 4 1 101 1
+  air 1200 4 1 102 1
+  fuel 1200 4 1 103 1
+  graphite 1200 4 1 104 1
+  inor 1200 4 1 105 1
+  basket 1200 4 1 106 1
+  lower_head 1200 4 1 107 1
+
+[FILES]
+  2
+  statepoint-900K.h5 openmc msre-900K.py summary-900K.h5
+  statepoint-1200K.h5 openmc msre-1200K.py summary-1200K.h5
