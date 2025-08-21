@@ -16,7 +16,7 @@
 [Mesh]
   [graphite]
     type = FileMeshGenerator
-    file = 'nt_mesh_quad_base_in.e'
+    file = 'nt_mesh_quad_in.e'
   []
 []
 
@@ -24,8 +24,8 @@
   family = LAGRANGE
   order = SECOND
   var_name_base = group
-  fission_blocks = '10 11 15'
-  pre_blocks = '10 11 15'
+#  fission_blocks = '10 11 15'
+#  pre_blocks = '10 11 15'
   create_temperature_var = false
   eigen = true
 []
@@ -97,6 +97,7 @@
   [wall]
     type = CoupledConvectiveHeatFluxBC
     variable = T_solid
+    boundary = '100'
     htc = h_wall
     T_infinity = T_fluid
   []
@@ -105,6 +106,7 @@
 [Functions]
   [graphite_heat_func]
     type = ParsedFunction
+    expression = '1'
   []
 []
 

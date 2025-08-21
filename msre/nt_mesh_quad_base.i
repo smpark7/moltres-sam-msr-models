@@ -340,7 +340,6 @@ inch = 2.54e-2
     type = BlockDeletionGenerator
     input = stitch_4
     block = '13 14'
-    new_boundary = 101
   []
   # Extrude to 3D
   [extrude]
@@ -358,9 +357,17 @@ inch = 2.54e-2
     transform = TRANSLATE
     vector_value = '0 0 0.1875'
   []
-  [cleanup]
-    type = BoundaryDeletionGenerator
+  [graphite_bounds]
+    type = SideSetsBetweenSubdomainsGenerator
     input = transform_up
-    boundary_names = '5 7'
+    new_boundary = 100
+    primary_block = '0 2'
+    paired_block = '10 11 15'
+  []
+  [cleanup]
+    type = RenameBoundaryGenerator
+    input = graphite_bounds
+    old_boundary = 5
+    new_boundary = 101
   []
 []
