@@ -76,7 +76,7 @@ def main(mesh_base_file='nt_mesh_quad_base.i',
             node['boundary_new'] = 200 + i * 10 + j
             node['bottom_left'] = f"'{x[j]} {x[i]} {lower_plenum_height}'"
             node['top_right'] = top_right
-            node['included_boundaries'] = '101'
+            node['included_boundaries'] = '100'
 
     pyhit.write(mesh_file, root)
 

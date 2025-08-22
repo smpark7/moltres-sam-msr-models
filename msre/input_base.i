@@ -1,112 +1,79 @@
 [GlobalParams]
-  num_groups = 2
-  num_precursor_groups = 6
-  use_exp_form = false
-  group_fluxes = 'group1 group2'
-  temperature = 922
-  sss2_input = true
-  account_delayed = false
-[]
-
-[Problem]
-  type = EigenProblem
-  bx_norm = bnorm
-[]
-
-[Mesh]
-  [graphite]
-    type = FileMeshGenerator
-    file = 'nt_mesh_quad_in.e'
-  []
-[]
-
-[Nt]
-  family = LAGRANGE
-  order = SECOND
-  var_name_base = group
-#  fission_blocks = '10 11 15'
-#  pre_blocks = '10 11 15'
-  create_temperature_var = false
-  eigen = true
-[]
-
-[Variables]
-  [T_solid]
-    family = LAGRANGE
-    order = FIRST
-    block = '0 1 2'
-    initial_condition = 900
-    scaling = 1e-6
-  []
+  global_init_P = 1.0e5
+  global_init_V = 0.25
+  global_init_T = 900
+  scaling_factor_var = '1 1e-3 1e-6'
 []
 
 [AuxVariables]
-  [h_wall]
-    family = LAGRANGE
-    order = FIRST
-    block = '10 11 15'
-    initial_condition = 1e3
-  []
-  [T_fluid]
-    family = LAGRANGE
-    order = FIRST
-    block = '10 11 15'
-    initial_condition = 900
+  [T_wall]
   []
 []
 
-[Kernels]
-  [diffusion]
-    type = MatDiffusion
-    variable = T_solid
-    block = '0 1 2'
-    diffusivity = 'k'
-  []
-  [source]
-    type = HeatSource
-    variable = T_solid
-    block = '0 1 2'
-    function = graphite_heat_func
+[EOS]
+  [eos]
+    type = SaltEquationOfState
   []
 []
 
-[Materials]
-  [graphite]
-    type = MoltresJsonMaterial
-    base_file = 'xsdata/xsdata-meter.json'
-    material_key = 'graphite'
-    block = '0 1 2'
-    interp_type = 'none'
-    prop_names = 'k cp rho'
-    prop_values = '154.797 1758.46 1860'
-    temperature = T_solid
+[Components]
+  [inlet]
+    type = PBTDJ
+    input = 'lower_plenum(in)'
+    eos = eos
   []
-  [salt]
-    type = MoltresJsonMaterial
-    base_file = 'xsdata/xsdata-meter.json'
-    material_key = 'fuel'
-    block = '10 11 15'
-    interp_type = 'none'
-    prop_names = 'k cp rho'
-    prop_values = '10.1 2386 2327.5'
-    temperature = T_fluid
+  [lower_plenum]
+    type = PBOneDFluidComponent
+    eos = eos
+    orientation = '0 0 1'
+    f = 0
   []
+  [upper_plenum]
+    type = PBOneDFluidComponent
+    eos = eos
+    orientation = '0 0 1'
+    f = 0
+  []
+  [lower_branch]
+    type = PBBranch
+    eos = eos
+  []
+  [upper_branch]
+    type = PBBranch
+    eos = eos
+  []
+  [outlet]
+    type = PBTDV
+    input = 'upper_plenum(out)'
+    eos = eos
+  []
+#  [surface_coupling_12]
+#    type = SurfaceCoupling
+#    surface1_name = pipe1:solid:top_wall
+#    surface2_name = pipe2:solid:bottom_wall
+#    coupling_type = GapHeatTransfer
+#    h_gap = 1e9
+#  []
 []
 
-[BCs]
-  [wall]
-    type = CoupledConvectiveHeatFluxBC
-    variable = T_solid
-    boundary = '100'
-    htc = h_wall
-    T_infinity = T_fluid
+[ComponentInputParameters]
+  [pipe_input]
+    type = PBOneDFluidComponentParameters
+    eos = eos
+    orientation = '0 0 1'
+    f = 0
   []
 []
 
 [Functions]
-  [graphite_heat_func]
+  [rho_func]
+    type = PiecewiseLinear
+  []
+  [mu_func]
+    type = PiecewiseLinear
+  []
+  [salt_heat_func]
     type = ParsedFunction
-    expression = '1'
   []
 []
 
@@ -116,46 +83,57 @@
 [Preconditioning]
   [SMP_PJFNK]
     type = SMP
+    full = true
     solve_type = 'PJFNK'
-    petsc_options_iname = '-pc_type -pc_hypre_type -pc_hypre_boomeramg_strong_threshold -pc_hypre_boomeramg_agg_nl -pc_hypre_boomeramg_agg_num_paths -pc_hypre_boomeramg_max_levels -pc_hypre_boomeramg_coarsen_type -pc_hypre_boomeramg_interp_type -pc_hypre_boomeramg_P_max -pc_hypre_boomeramg_truncfactor -ksp_gmres_restart'
-    petsc_options_value = 'hypre boomeramg 0.7 4 5 25 HMIS ext+i 2 0.3 200'
-#    full = true
-#    petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
-#    petsc_options_value = 'lu superlu_dist'
+    petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
+    petsc_options_value = 'lu superlu_dist'
   []
 []
 
 [Executioner]
-  type = Eigenvalue
-  free_power_iterations = 4
-  initial_eigenvalue = 1
+#  type = Steady
+  type = Transient
+  dt = 1
+  end_time = 20
 
-  solve_type = 'PJFNK'
-  petsc_options_iname = '-pc_type -pc_hypre_type -pc_hypre_boomeramg_strong_threshold -pc_hypre_boomeramg_agg_nl -pc_hypre_boomeramg_agg_num_paths -pc_hypre_boomeramg_max_levels -pc_hypre_boomeramg_coarsen_type -pc_hypre_boomeramg_interp_type -pc_hypre_boomeramg_P_max -pc_hypre_boomeramg_truncfactor -ksp_gmres_restart'
-  petsc_options_value = 'hypre boomeramg 0.7 4 5 25 HMIS ext+i 2 0.3 200'
-  line_search = 'none'
+  petsc_options_iname = '-ksp_gmres_restart'
+  petsc_options_value = '100'
 
-  nl_abs_tol = 1e-10
+  nl_rel_tol = 1e-7
+  nl_abs_tol = 1e-6
+  nl_max_its = 20
 
+  l_tol = 1e-4
+  l_max_its = 100
+
+  auto_advance = true
   fixed_point_max_its = 20
-  fixed_point_rel_tol = 1e-9
-  fixed_point_abs_tol = 1e-8
+  fixed_point_rel_tol = 1e-7
+  fixed_point_abs_tol = 1e-6
+
+  [Quadrature]
+    type = TRAP
+    order = FIRST
+  []
 []
 
 [MultiApps]
   [sub]
-    type = TransientMultiApp
-    app_type = SamApp
+    type = FullSolveMultiApp
+    app_type = MoltresApp
+    library_path = '/work/10525/smpark3/ls6/projects/moltres/lib'
     positions = '0 0 0'
     input_files = 'input_sub.i'
     execute_on = timestep_end
+    keep_solution_during_restore = true
+    keep_aux_solution_during_restore = true
   []
 []
 
 [Transfers]
-  [T_wall_to_sub]
+  [T_wall_from_sub]
     type = MultiAppGeneralFieldNearestLocationTransfer
-    to_multi_app = sub
+    from_multi_app = sub
     source_variable = T_solid
     variable = T_wall
     from_blocks = '2'
@@ -163,17 +141,17 @@
     displaced_target_mesh = true
     search_value_conflicts = false
   []
-  [T_fluid_from_sub]
+  [T_fluid_to_sub]
     type = MultiAppGeneralFieldNearestLocationTransfer
-    from_multi_app = sub
+    to_multi_app = sub
     source_variable = temperature
     variable = T_fluid
     displaced_source_mesh = true
     search_value_conflicts = false
   []
-  [T_fluid_from_sub_control_channel]
+  [T_fluid_to_sub_control_channel]
     type = MultiAppGeneralFieldNearestLocationTransfer
-    from_multi_app = sub
+    to_multi_app = sub
     source_variable = temperature
     variable = T_fluid
     displaced_source_mesh = true
@@ -181,9 +159,9 @@
     from_blocks = 'pipe_44'
     search_value_conflicts = false
   []
-  [h_wall_from_sub]
+  [h_wall_to_sub]
     type = MultiAppGeneralFieldNearestLocationTransfer
-    from_multi_app = sub
+    to_multi_app = sub
     source_variable = heat_transfer_coefficient
     variable = h_wall
     displaced_source_mesh = true
@@ -192,31 +170,79 @@
 []
 
 [Postprocessors]
-  [bnorm]
-    type = ElmIntegTotFissNtsPostprocessor
-    block = '10 11 15'
-    execute_on = linear
+  [outlet_temperature]
+    type = ComponentBoundaryVariableValue
+    input = upper_plenum(out)
+    variable = temperature
   []
-  [eigenvalue]
-    type = VectorPostprocessorComponent
-    vectorpostprocessor = eigenvalues
-    vector_name = eigen_values_real
-    index = 0
+  [outlet_velocity]
+    type = ComponentBoundaryVariableValue
+    input = upper_plenum(out)
+    variable = velocity
   []
-  [max_temp]
-    type = NodalExtremeValue
-    variable = T_solid
-    block = '0 1 2'
-    value_type = min
+  [outlet_pressure]
+    type = ComponentBoundaryVariableValue
+    input = upper_plenum(out)
+    variable = pressure
+  []
+  [control_temperature]
+    type = ComponentBoundaryVariableValue
+    input = pipe_44(out)
+    variable = temperature
+  []
+  [control_velocity]
+    type = ComponentBoundaryVariableValue
+    input = pipe_44(out)
+    variable = velocity
+  []
+  [pipe_43_temperature]
+    type = ComponentBoundaryVariableValue
+    input = pipe_43(out)
+    variable = temperature
+  []
+  [pipe_43_velocity]
+    type = ComponentBoundaryVariableValue
+    input = pipe_43(out)
+    variable = velocity
   []
 []
 
 [VectorPostprocessors]
-  [eigenvalues]
-    type = Eigenvalues
-    inverse_eigenvalue = true
-    outputs = console
-  []
+#  [temperature]
+#    type = NodalValueSampler
+#    variable = temperature
+#    sort_by = 'z'
+#    block = 'pipe1 pipe2 pipe3 pipe4'
+#    use_displaced_mesh = true
+#  []
+#  [pressure]
+#    type = NodalValueSampler
+#    variable = pressure
+#    sort_by = 'z'
+#    block = 'pipe1 pipe2 pipe3 pipe4'
+#    use_displaced_mesh = true
+#  []
+#  [velocity]
+#    type = NodalValueSampler
+#    variable = velocity
+#    sort_by = 'z'
+#    block = 'pipe1 pipe2 pipe3 pipe4'
+#    use_displaced_mesh = true
+#  []
+#  [density]
+#    type = NodalValueSampler
+#    variable = rho
+#    sort_by = 'z'
+#    block = 'pipe1 pipe2 pipe3 pipe4'
+#    use_displaced_mesh = true
+#  []
+#  [wall_temperature]
+#    type = NodalValueSampler
+#    variable = Tw
+#    sort_by = 'z'
+#    block = 'pipe1 pipe2 pipe3 pipe4'
+#    use_displaced_mesh = true
+#  []
 []
 
 [Outputs]
@@ -230,6 +256,5 @@
     use_displaced = true
     execute_on = 'initial timestep_end'
     sequence = false
-    discontinuous = true
   []
 []

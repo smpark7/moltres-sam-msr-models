@@ -55,11 +55,11 @@ def main(input_base_file='input_base.i', input_file='input.i',
     control_channel_Ph = 2 * pi * control_channel_outer_r
 
     # Read base input file
-    sub_root = pyhit.load(sub_base_file)
+    root = pyhit.load(input_base_file)
 
     # Shared input parameters among pipe Components
     pipe_input = moosetree.find(
-        sub_root,
+        root,
         func=lambda n: n.fullpath == '/ComponentInputParameters/pipe_input')
     pipe_input['eos'] = 'eos'
     pipe_input['Dh'] = hydraulic_diameter  # m
@@ -72,18 +72,18 @@ def main(input_base_file='input_base.i', input_file='input.i',
 
     # Inlet Component
     inlet = moosetree.find(
-        sub_root, func=lambda n: n.fullpath == '/Components/inlet')
+        root, func=lambda n: n.fullpath == '/Components/inlet')
     inlet['m_bc'] = DENSITY * TOTAL_VOL_FLOW_RATE  # kg/s
     inlet['T_bc'] = temperature
 
     # Outlet Component
     outlet = moosetree.find(
-        sub_root, func=lambda n: n.fullpath == '/Components/outlet')
+        root, func=lambda n: n.fullpath == '/Components/outlet')
     outlet['p_bc'] = CORE_OUTLET_PRESSURE  # Pa
 
     # Lower plenum
     lower_plenum = moosetree.find(
-        sub_root, func=lambda n: n.fullpath == '/Components/lower_plenum')
+        root, func=lambda n: n.fullpath == '/Components/lower_plenum')
     lower_plenum['Dh'] = total_width
     lower_plenum['A'] = total_width ** 2
     lower_plenum['orientation'] = "'0 0 1'"
@@ -93,7 +93,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
 
     # Upper plenum
     upper_plenum = moosetree.find(
-        sub_root, func=lambda n: n.fullpath == '/Components/upper_plenum')
+        root, func=lambda n: n.fullpath == '/Components/upper_plenum')
     upper_plenum['Dh'] = total_width
     upper_plenum['A'] = total_width ** 2
     upper_plenum['orientation'] = "'0 0 1'"
@@ -108,7 +108,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
 
     # Create pipe components and UserObjects
     components = moosetree.find(
-        sub_root, func=lambda n: n.fullpath == '/Components')
+        root, func=lambda n: n.fullpath == '/Components')
     pipe_inlets, pipe_outlets = '', ''
     for i in range(nx-1):
         for j in range(nx-1):
@@ -123,7 +123,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
             pipe_outlets += pipe_name + '(out) '
             components.append(pipe_name)
             pipe = moosetree.find(
-                sub_root, func=lambda n: n.fullpath == '/Components/' + pipe_name)
+                root, func=lambda n: n.fullpath == '/Components/' + pipe_name)
             pipe['type'] = 'PBOneDFluidComponent'
             if i == center_idx[0] and j == center_idx[0]:
                 pipe['eos'] = 'eos'
@@ -144,7 +144,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
             heat_transfer_name = 'heat_flux_' + str(i) + str(j)
             components.append(heat_transfer_name)
             heat_transfer = moosetree.find(
-                sub_root,
+                root,
                 func=lambda n:n.fullpath == '/Components/' + heat_transfer_name)
             heat_transfer['type'] = 'HeatTransferWithExternalHeatStructure'
             heat_transfer['T_wall_name'] = 'T_wall'
@@ -154,7 +154,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
 
     # Lower branch
     lower_branch = moosetree.find(
-        sub_root, lambda n: n.fullpath == '/Components/lower_branch')
+        root, lambda n: n.fullpath == '/Components/lower_branch')
     lower_branch['K'] = "'" + "0 " * 101 + "'"
     lower_branch['inputs'] = 'lower_plenum(out)'
     lower_branch['outputs'] = "'" + pipe_inlets + "'"
@@ -162,7 +162,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
 
     # Upper branch
     upper_branch = moosetree.find(
-        sub_root, lambda n: n.fullpath == '/Components/upper_branch')
+        root, lambda n: n.fullpath == '/Components/upper_branch')
     lower_branch['K'] = "'" + "0 " * 101 + "'"
     upper_branch['inputs'] = "'" + pipe_outlets + "'"
     upper_branch['outputs'] = 'upper_plenum(in)'
@@ -172,7 +172,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
     # TODO: Refactor to use flowforge
     # TODO: Refactor this section so that it can be reused in other SAM input
     # files
-    eos = moosetree.find(sub_root, func=lambda n: n.fullpath == '/EOS/eos')
+    eos = moosetree.find(root, func=lambda n: n.fullpath == '/EOS/eos')
     eos['type'] = 'PTFunctionsEOS'
     eos['cp'] = 2386
     eos['rho'] = 'rho_func'
@@ -184,7 +184,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
 
     # Density function
     rho_func = moosetree.find(
-        sub_root, func=lambda n: n.fullpath == '/Functions/rho_func')
+        root, func=lambda n: n.fullpath == '/Functions/rho_func')
     rho_func.setComment("type",
                         "Density function, rho = 2413 - (0.488 * T) kg/m3")
     def rho_eval(T):
@@ -196,7 +196,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
 
     # Dynamic viscosity function
     mu_func = moosetree.find(
-        sub_root, func=lambda n: n.fullpath == '/Functions/mu_func')
+        root, func=lambda n: n.fullpath == '/Functions/mu_func')
     mu_func.setComment(
         "type", "Dynamic viscosity function, mu = 0.116e-3 * exp(3755 / T)")
     def mu_eval(T):
@@ -208,40 +208,41 @@ def main(input_base_file='input_base.i', input_file='input.i',
 
     # Salt heat function
     salt_heat_func = moosetree.find(
-        sub_root, func=lambda n: n.fullpath == '/Functions/salt_heat_func')
+        root, func=lambda n: n.fullpath == '/Functions/salt_heat_func')
     salt_heat_func['expression'] = "'10.162e6 * sin(pi*((x+0.1107)/1.9736))'"
-
-    pyhit.write(sub_file, sub_root)
-
-    root = pyhit.load(input_base_file)
-
-    # BCs
-    wall = moosetree.find(
-        root, func=lambda n:n.fullpath == '/BCs/wall')
-    boundary = [str(int(n)) for i, n in enumerate(np.linspace(200, 299, 100))
-                if i not in [45, 54, 55]]
-    boundary = ' '.join(boundary)
-    wall['boundary'] = "'" + boundary + "'"
 
     # Nearest location transfers
     boundary = [str(int(n)) for i, n in enumerate(np.linspace(200, 299, 100))
                 if i not in [44, 45, 54, 55]]
     boundary = ' '.join(boundary)
     T_fluid_transfer = moosetree.find(
-        root, func=lambda n:n.fullpath == '/Transfers/T_fluid_from_sub')
+        root, func=lambda n:n.fullpath == '/Transfers/T_fluid_to_sub')
     T_fluid_transfer['to_boundaries'] = "'" + boundary + "'"
     h_wall_transfer = moosetree.find(
-        root, func=lambda n:n.fullpath == '/Transfers/h_wall_from_sub')
+        root, func=lambda n:n.fullpath == '/Transfers/h_wall_to_sub')
     h_wall_transfer['to_boundaries'] = "'" + boundary + "'"
+
+    pyhit.write(input_file, root)
+
+    # Sub file
+    sub_root = pyhit.load(sub_base_file)
+
+    # BCs
+    wall = moosetree.find(
+        sub_root, func=lambda n:n.fullpath == '/BCs/wall')
+    boundary = [str(int(n)) for i, n in enumerate(np.linspace(200, 299, 100))
+                if i not in [45, 54, 55]]
+    boundary = ' '.join(boundary)
+    wall['boundary'] = "'" + boundary + "'"
 
     # Graphite heat function
     graphite_heat_func = moosetree.find(
-        root, func=lambda n: n.fullpath == '/Functions/graphite_heat_func')
+        sub_root, func=lambda n: n.fullpath == '/Functions/graphite_heat_func')
     graphite_heat_func['expression'] = "'0.7163e6 * cos(1.53 * z - 1.2677) + 0.0127e6'"
 
     # Graphite material properties
     graphite = moosetree.find(
-        root, func=lambda n: n.fullpath == '/Materials/graphite')
+        sub_root, func=lambda n: n.fullpath == '/Materials/graphite')
     graphite['prop_names'] = "'k cp rho'"
     graphite['prop_values'] = f"'{graphite_k} {graphite_cp} {graphite_rho}'"
 
@@ -305,7 +306,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
 #            h_wall['to_boundaries'] = '2' + str(i) + str(j)
 #            h_wall['search_value_conflicts'] = 'false'
 
-    pyhit.write(input_file, root)
+    pyhit.write(sub_file, sub_root)
 
 
 if __name__ == "__main__":
