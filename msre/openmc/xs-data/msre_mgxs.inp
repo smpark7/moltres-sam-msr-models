@@ -7,20 +7,20 @@
 
 [BRANCH]
   14
-  ctrlrod 900 3 1 101 1
-  air 900 3 1 102 1
-  fuel 900 3 1 103 1
-  graphite 900 3 1 104 1
-  inor 900 3 1 105 1
-  basket 900 3 1 106 1
-  lower_head 900 3 1 107 1
-  ctrlrod 1200 4 1 101 1
-  air 1200 4 1 102 1
-  fuel 1200 4 1 103 1
-  graphite 1200 4 1 104 1
-  inor 1200 4 1 105 1
-  basket 1200 4 1 106 1
-  lower_head 1200 4 1 107 1
+  ctrlrod 900 1 1 101 1
+  air 900 1 1 102 1
+  fuel 900 1 1 103 1
+  graphite 900 1 1 104 1
+  inor 900 1 1 106 1
+  basket 900 1 1 107 1
+  lower_head 900 1 1 108 1
+  ctrlrod 1200 2 1 101 1
+  air 1200 2 1 102 1
+  fuel 1200 2 1 103 1
+  graphite 1200 2 1 104 1
+  inor 1200 2 1 106 1
+  basket 1200 2 1 107 1
+  lower_head 1200 2 1 108 1
 
 [FILES]
   2

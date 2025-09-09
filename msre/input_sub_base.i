@@ -72,20 +72,22 @@
 [Materials]
   [graphite]
     type = MoltresJsonMaterial
-    base_file = 'xsdata/xsdata-meter.json'
+#    base_file = 'xsdata/xsdata-meter.json'
+    base_file = 'openmc/xs-data/msre_si.json'
     material_key = 'graphite'
     block = '0 1 2'
-    interp_type = 'none'
+    interp_type = 'linear'
     prop_names = 'k cp rho'
     prop_values = '154.797 1758.46 1860'
     temperature = T_solid
   []
   [salt]
     type = MoltresJsonMaterial
-    base_file = 'xsdata/xsdata-meter.json'
+#    base_file = 'xsdata/xsdata-meter.json'
+    base_file = 'openmc/xs-data/msre_si.json'
     material_key = 'fuel'
     block = '10 11 15'
-    interp_type = 'none'
+    interp_type = 'linear'
     prop_names = 'k cp rho'
     prop_values = '10.1 2386 2327.5'
     temperature = T_fluid
