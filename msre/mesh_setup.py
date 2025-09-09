@@ -84,7 +84,5 @@ def main(mesh_base_file='nt_mesh_quad_base.i',
 if __name__ == "__main__":
     if len(argv) == 1:
         main()
-#    elif len(argv) == 2:
-#        main(num_nodes=argv[1])
-#    elif len(argv) == 4:
-#        main(mesh_base_file=argv[1], mesh_file=argv[2], num_nodes=argv[3])
+    elif len(argv) == 4:
+        main(mesh_base_file=argv[1], mesh_file=argv[2])
