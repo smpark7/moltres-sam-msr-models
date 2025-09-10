@@ -81,15 +81,11 @@ def main(mesh_base_file='nt_mesh_quad_base.i',
     # Label channel block IDs
     for i in range(nx-1):
         for j in range(nx-1):
-            if i == center_idx[0] and j == center_idx[0]:
-                top_right = \
-                    f"'{x[j+2]} {x[i+2]} {core_height+lower_plenum_height}'"
-            elif i in center_idx and j in center_idx:
+            if i in center_idx and j in center_idx:
                 continue
-            else:
-                top_right = \
-                    f"'{x[j+1]} {x[i+1]} {core_height+lower_plenum_height}'"
-            prev_name, curr_name = curr_name, 'channel_block' + str(i) + str(j)
+            top_right = \
+                f"'{x[j+1]} {x[i+1]} {core_height+lower_plenum_height}'"
+            prev_name, curr_name = curr_name, 'channel_block_2' + str(i) + str(j)
             mesh.append(curr_name)
             node = moosetree.find(
                 root, func=lambda n: n.fullpath == '/Mesh/' + curr_name)
@@ -98,7 +94,30 @@ def main(mesh_base_file='nt_mesh_quad_base.i',
             node['block_id'] = 200 + i * 10 + j
             node['bottom_left'] = f"'{x[j]} {x[i]} {lower_plenum_height}'"
             node['top_right'] = top_right
-            node['restricted_subdomains'] = '10 11 15'
+            node['restricted_subdomains'] = '10'
+            prev_name, curr_name = curr_name, 'channel_block_3' + str(i) + str(j)
+            mesh.append(curr_name)
+            node = moosetree.find(
+                root, func=lambda n: n.fullpath == '/Mesh/' + curr_name)
+            node['type'] = 'SubdomainBoundingBoxGenerator'
+            node['input'] = prev_name
+            node['block_id'] = 300 + i * 10 + j
+            node['bottom_left'] = f"'{x[j]} {x[i]} {lower_plenum_height}'"
+            node['top_right'] = top_right
+            node['restricted_subdomains'] = '11'
+
+    top_right = \
+        f"'{x[center_idx[0]+2]} {x[center_idx[0]+2]} {core_height+lower_plenum_height}'"
+    prev_name, curr_name = curr_name, 'channel_block_244'
+    mesh.append(curr_name)
+    node = moosetree.find(
+        root, func=lambda n: n.fullpath == '/Mesh/' + curr_name)
+    node['type'] = 'SubdomainBoundingBoxGenerator'
+    node['input'] = prev_name
+    node['block_id'] = 244
+    node['bottom_left'] = f"'{x[center_idx[0]]} {x[center_idx[0]]} {lower_plenum_height}'"
+    node['top_right'] = top_right
+    node['restricted_subdomains'] = '15'
 
     pyhit.write(mesh_file, root)
 
