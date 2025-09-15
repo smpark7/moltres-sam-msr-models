@@ -65,7 +65,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
     pipe_input['Dh'] = hydraulic_diameter  # m
     pipe_input['A'] = flow_area  # m2
     pipe_input['orientation'] = "'0 0 1'"
-    pipe_input['heat_source'] = 'salt_heat_func'
+    pipe_input['heat_source_var'] = 'heat'
     ## Dittus-Boelter (Salt heating) Nu = 0.023 Re^0.8 Pr^0.4
     pipe_input['HTC_user_option'] = 'UserForced'
     pipe_input['User_defined_HTC_parameters'] = "'4.36 0 0 0 0 0 0'"
@@ -131,7 +131,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
                 pipe['A'] = control_channel_A
                 pipe['Ph'] = control_channel_Ph
                 pipe['orientation'] = "'0 0 1'"
-                pipe['heat_source'] = 'salt_heat_func'
+                pipe['heat_source_var'] = 'heat'
                 pipe['HTC_geometry_type'] = 'Pipe'
                 pipe['HTC_user_option'] = 'UserForced'
                 pipe['User_defined_HTC_parameters'] = "'4.36 0 0 0 0 0 0'"
@@ -206,12 +206,12 @@ def main(input_base_file='input_base.i', input_file='input.i',
     mu_func['x'] = "'" + str(mu_x)[1:-1].replace(",", "") + "'"
     mu_func['y'] = "'" + str(mu_y)[1:-1].replace(",", "") + "'"
 
-    # Salt heat function
-    salt_heat_func = moosetree.find(
-        root, func=lambda n: n.fullpath == '/Functions/salt_heat_func')
-    salt_heat_func['expression'] = "'10.162e6 * sin(pi*((x+0.1107)/1.9736))'"
+#    # Salt heat function
+#    salt_heat_func = moosetree.find(
+#        root, func=lambda n: n.fullpath == '/Functions/salt_heat_func')
+#    salt_heat_func['expression'] = "'10.162e6 * sin(pi*((x+0.1107)/1.9736))'"
 
-    # Nearest location transfers
+    # Nearest location transfer to_boundaries
     boundary = [str(int(n)) for i, n in enumerate(np.linspace(200, 299, 100))
                 if i not in [44, 45, 54, 55]]
     boundary = ' '.join(boundary)
@@ -221,8 +221,6 @@ def main(input_base_file='input_base.i', input_file='input.i',
     h_wall_transfer = moosetree.find(
         root, func=lambda n:n.fullpath == '/Transfers/h_wall_to_sub')
     h_wall_transfer['to_boundaries'] = "'" + boundary + "'"
-
-    pyhit.write(input_file, root)
 
     # Sub file
     sub_root = pyhit.load(sub_base_file)
@@ -246,39 +244,103 @@ def main(input_base_file='input_base.i', input_file='input.i',
     graphite['prop_names'] = "'k cp rho'"
     graphite['prop_values'] = f"'{graphite_k} {graphite_cp} {graphite_rho}'"
 
-#    # UserObjects & Transfers
-#    uo = moosetree.find(
-#        root, func=lambda n: n.fullpath == '/UserObjects')
-#    transfers = moosetree.find(
-#        root, func=lambda n: n.fullpath == '/Transfers')
-#    for i in range(nx-1):
-#        for j in range(nx-1):
-#            if i == center_idx[0] and j == center_idx[0]:
-#                pass
-#            elif i in center_idx and j in center_idx:
-#                continue
-#            uo_name = 'T_wall_uo_' + str(i) + str(j)
-#            uo.append(uo_name)
-#            T_wall_uo = moosetree.find(
-#                root, func=lambda n: n.fullpath == '/UserObjects/' + uo_name)
-#            T_wall_uo['type'] = 'LayeredSideAverage'
-#            T_wall_uo['variable'] = 'T_solid'
-#            T_wall_uo['direction'] = 'z'
-#            T_wall_uo['num_layers'] = 170
-#            T_wall_uo['boundary'] = '2' + str(i) + str(j)
-#            T_wall_uo['execute_on'] = "'initial timestep_end'"
+    # UserObjects & Transfers
+    uo = moosetree.find(
+        sub_root, func=lambda n: n.fullpath == '/UserObjects')
+    transfers = moosetree.find(
+        root, func=lambda n: n.fullpath == '/Transfers')
+    for i in range(nx-1):
+        for j in range(nx-1):
+            if i == center_idx[0] and j == center_idx[0]:
+                pass
+            elif i in center_idx and j in center_idx:
+                continue
+            T_wall_uo_name = 'T_wall_uo_' + str(i) + str(j)
+            uo.append(T_wall_uo_name)
+            T_wall_uo = moosetree.find(
+                sub_root,
+                func=lambda n: n.fullpath == '/UserObjects/' + T_wall_uo_name)
+            T_wall_uo['type'] = 'LayeredSideAverage'
+            T_wall_uo['variable'] = 'T_solid'
+            T_wall_uo['direction'] = 'z'
+            T_wall_uo['num_layers'] = 170
+            T_wall_uo['boundary'] = '2' + str(i) + str(j)
+            T_wall_uo['execute_on'] = "'initial timestep_end'"
+            T_wall_uo['sample_type'] = 'interpolate'
 
-#            transfer_name = 'T_wall_to_sub_' + str(i) + str(j)
-#            transfers.append(transfer_name)
-#            transfer = moosetree.find(
-#                root, func=lambda n: n.fullpath == '/Transfers/' + transfer_name)
-#            transfer['type'] = 'MultiAppGeneralFieldUserObjectTransfer'
-#            transfer['to_multi_app'] = 'sub'
-#            transfer['source_user_object'] = uo_name
-#            transfer['variable'] = 'T_wall'
-#            transfer['displaced_target_mesh'] = 'true'
-#            transfer['to_blocks'] = 'pipe_' + str(i) + str(j)
-#            transfer['search_value_conflicts'] = 'false'
+            T_wall_transfer_name = 'T_wall_from_sub_' + str(i) + str(j)
+            transfers.append(T_wall_transfer_name)
+            T_wall_transfer = moosetree.find(
+                root,
+                func=lambda n: n.fullpath == '/Transfers/' + T_wall_transfer_name)
+            T_wall_transfer['type'] = 'MultiAppGeneralFieldUserObjectTransfer'
+            T_wall_transfer['from_multi_app'] = 'sub'
+            T_wall_transfer['source_user_object'] = T_wall_uo_name
+            T_wall_transfer['variable'] = 'T_wall'
+            T_wall_transfer['displaced_target_mesh'] = 'true'
+            T_wall_transfer['to_blocks'] = 'pipe_' + str(i) + str(j)
+            T_wall_transfer['search_value_conflicts'] = 'false'
+
+            heat_uo_name = 'heat_uo_' + str(i) + str(j)
+            uo.append(heat_uo_name)
+            heat_uo = moosetree.find(
+                sub_root,
+                func=lambda n: n.fullpath == '/UserObjects/' + heat_uo_name)
+            heat_uo['type'] = 'LayeredAverage'
+            heat_uo['variable'] = 'heat'
+            heat_uo['direction'] = 'z'
+            heat_uo['num_layers'] = 170
+            if i == 4 and j == 4:
+                block = '244'
+            else:
+                block = f"'{200 + i * 10 + j} {300 + i * 10 + j}'"
+            heat_uo['block'] = block
+            heat_uo['execute_on'] = "'initial timestep_end'"
+            heat_uo['sample_type'] = 'interpolate'
+
+            heat_transfer_name = 'heat_from_sub_' + str(i) + str(j)
+            transfers.append(heat_transfer_name)
+            heat_transfer = moosetree.find(
+                root,
+                func=lambda n: n.fullpath == '/Transfers/' + heat_transfer_name)
+            heat_transfer['type'] = 'MultiAppGeneralFieldUserObjectTransfer'
+            heat_transfer['from_multi_app'] = 'sub'
+            heat_transfer['source_user_object'] = heat_uo_name
+            heat_transfer['variable'] = 'heat'
+            heat_transfer['displaced_target_mesh'] = 'true'
+            heat_transfer['to_blocks'] = 'pipe_' + str(i) + str(j)
+            heat_transfer['search_value_conflicts'] = 'false'
+
+    # Channel block definitions
+    blocks = [str(int(n)) for i, n in enumerate(np.linspace(200, 399, 200))
+                if i not in [45, 54, 55, 144, 145, 154, 155]]
+    blocks = ' '.join(blocks)
+    blocks = "'" + blocks + "'"
+    nt_action =  moosetree.find(
+        sub_root, func=lambda n: n.fullpath == '/Nt')
+    nt_action['fission_blocks'] = blocks
+    heat_aux = moosetree.find(
+        sub_root, func=lambda n: n.fullpath == '/AuxVariables/heat')
+    heat_aux['block'] = blocks
+    temp_aux = moosetree.find(
+        sub_root, func=lambda n: n.fullpath == '/AuxKernels/temperature_fluid')
+    temp_aux['block'] = blocks
+    salt_mat = moosetree.find(
+        sub_root, func=lambda n: n.fullpath == '/Materials/salt')
+    salt_mat['block'] = blocks
+    bnorm = moosetree.find(
+        sub_root, func=lambda n: n.fullpath == '/Postprocessors/bnorm')
+    bnorm['block'] = blocks
+    total_heat = moosetree.find(
+        sub_root, func=lambda n: n.fullpath == '/Postprocessors/total_heat')
+    total_heat['block'] = blocks
+    blocks_2 = [str(int(n)) for i, n in enumerate(np.linspace(200, 399, 200))
+                if i not in [44, 45, 54, 55, 144, 145, 154, 155]]
+    blocks_2 = ' '.join(blocks_2)
+    blocks_2 = "'" + blocks_2 + "'"
+    T_fluid_transfer = moosetree.find(
+        root, func=lambda n: n.fullpath == '/Transfers/T_fluid_to_sub_block')
+    T_fluid_transfer['to_blocks'] = blocks_2
 
 #            T_fluid_name = 'T_fluid_from_sub_' + str(i) + str(j)
 #            transfers.append(T_fluid_name)
@@ -292,7 +354,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
 #            T_fluid['from_blocks'] = 'pipe_' + str(i) + str(j)
 #            T_fluid['to_boundaries'] = '2' + str(i) + str(j)
 #            T_fluid['search_value_conflicts'] = 'false'
-#
+
 #            h_wall_name = 'h_wall_from_sub_' + str(i) + str(j)
 #            transfers.append(h_wall_name)
 #            h_wall = moosetree.find(
@@ -306,13 +368,13 @@ def main(input_base_file='input_base.i', input_file='input.i',
 #            h_wall['to_boundaries'] = '2' + str(i) + str(j)
 #            h_wall['search_value_conflicts'] = 'false'
 
+    pyhit.write(input_file, root)
     pyhit.write(sub_file, sub_root)
 
 
 if __name__ == "__main__":
     if len(argv) == 1:
         main()
-#    elif len(argv) == 2:
-#        main(num_nodes=argv[1])
-#    elif len(argv) == 4:
-#        main(input_base_file=argv[1], input_file=argv[2], num_nodes=argv[3])
+    elif len(argv) == 5:
+        main(input_base_file=argv[1], input_file=argv[2],
+             sub_base_file=argv[3], sub_file=argv[4])

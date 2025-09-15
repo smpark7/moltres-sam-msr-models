@@ -8,6 +8,8 @@
 [AuxVariables]
   [T_wall]
   []
+  [heat]
+  []
 []
 
 [EOS]
@@ -72,9 +74,6 @@
   [mu_func]
     type = PiecewiseLinear
   []
-  [salt_heat_func]
-    type = ParsedFunction
-  []
 []
 
 [UserObjects]
@@ -127,20 +126,22 @@
     execute_on = timestep_end
     keep_solution_during_restore = true
     keep_aux_solution_during_restore = true
+#    catch_up = true
+#    sub_cycling = true
   []
 []
 
 [Transfers]
-  [T_wall_from_sub]
-    type = MultiAppGeneralFieldNearestLocationTransfer
-    from_multi_app = sub
-    source_variable = T_solid
-    variable = T_wall
-    from_blocks = '2'
-    num_nearest_points = 40
-    displaced_target_mesh = true
-    search_value_conflicts = false
-  []
+#  [T_wall_from_sub]
+#    type = MultiAppGeneralFieldNearestLocationTransfer
+#    from_multi_app = sub
+#    source_variable = T_solid
+#    variable = T_wall
+#    from_blocks = '2'
+#    num_nearest_points = 40
+#    displaced_target_mesh = true
+#    search_value_conflicts = false
+#  []
   [T_fluid_to_sub]
     type = MultiAppGeneralFieldNearestLocationTransfer
     to_multi_app = sub
@@ -159,12 +160,41 @@
     from_blocks = 'pipe_44'
     search_value_conflicts = false
   []
+  [T_fluid_to_sub_block]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = temperature
+    variable = T_fluid
+    displaced_source_mesh = true
+    to_blocks = '10 11'
+    search_value_conflicts = false
+  []
+  [T_fluid_to_sub_block_control_channel]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = temperature
+    variable = T_fluid
+    displaced_source_mesh = true
+    to_blocks = '244'
+    from_blocks = 'pipe_44'
+    search_value_conflicts = false
+  []
   [h_wall_to_sub]
     type = MultiAppGeneralFieldNearestLocationTransfer
     to_multi_app = sub
     source_variable = heat_transfer_coefficient
     variable = h_wall
     displaced_source_mesh = true
+    search_value_conflicts = false
+  []
+  [h_wall_to_sub_control_channel]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = heat_transfer_coefficient
+    variable = h_wall
+    displaced_source_mesh = true
+    to_boundaries = '244'
+    from_blocks = 'pipe_44'
     search_value_conflicts = false
   []
 []

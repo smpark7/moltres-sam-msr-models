@@ -3,9 +3,9 @@
   num_precursor_groups = 6
   use_exp_form = false
   group_fluxes = 'group1 group2'
-  temperature = 922
   sss2_input = true
   account_delayed = false
+  temperature = temperature
 []
 
 [Problem]
@@ -14,9 +14,10 @@
 []
 
 [Mesh]
+  parallel_type = distributed
   [graphite]
     type = FileMeshGenerator
-    file = 'nt_mesh_quad_in.e'
+    file = 'nt_mesh_coarse_in.e'
   []
 []
 
@@ -25,7 +26,7 @@
   order = SECOND
   var_name_base = group
   fission_blocks = '10 11 15'
-  pre_blocks = '10 11 15'
+#  pre_blocks = '10 11 15'
   create_temperature_var = false
   eigen = true
 []
@@ -41,6 +42,10 @@
 []
 
 [AuxVariables]
+  [temperature]
+    family = MONOMIAL
+    order = SECOND
+  []
   [h_wall]
     family = LAGRANGE
     order = SECOND
@@ -51,6 +56,10 @@
     family = LAGRANGE
     order = SECOND
     initial_condition = 900
+  []
+  [heat]
+    family = MONOMIAL
+    order = SECOND
   []
 []
 
@@ -66,6 +75,27 @@
     variable = T_solid
     block = '0 1 2'
     function = graphite_heat_func
+  []
+[]
+
+[AuxKernels]
+  [temperature_fluid]
+    type = ProjectionAux
+    variable = temperature
+    v = T_fluid
+    block = '10 11 15'
+  []
+  [temperature_solid]
+    type = ProjectionAux
+    variable = temperature
+    v = T_solid
+    block = '0 1 2'
+  []
+  [heat_source]
+    type = FissionHeatSourceAux
+    variable = heat
+    tot_fission_heat = total_heat
+    power = ${fparse 8e6 / 11}
   []
 []
 
@@ -115,6 +145,9 @@
 []
 
 [Executioner]
+#  type = Transient
+#  dt = 1e-3
+#  end_time = 20
   type = Eigenvalue
   free_power_iterations = 2
   initial_eigenvalue = 1
@@ -124,7 +157,9 @@
   petsc_options_value = 'hypre boomeramg 0.7 4 5 25 HMIS ext+i 2 0.3 200'
   line_search = 'none'
 
-  nl_abs_tol = 1e-10
+#  nl_abs_tol = 1e-10
+  nl_abs_tol = 1e-8
+#  l_tol = 1e-3
 []
 
 #[MultiApps]
@@ -194,6 +229,10 @@
     block = '0 1 2'
     value_type = min
   []
+  [total_heat]
+    type = ElmIntegTotFissHeatPostprocessor
+    block = '10 11 15'
+  []
 []
 
 [VectorPostprocessors]
@@ -210,11 +249,9 @@
   [console]
     type = Console
   []
-  [out_displaced]
+  [out]
     type = Exodus
-    use_displaced = true
     execute_on = 'initial timestep_end'
-    sequence = false
     discontinuous = true
   []
 []
