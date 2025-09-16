@@ -14,7 +14,7 @@
 []
 
 [Mesh]
-  parallel_type = distributed
+#  parallel_type = distributed
   [graphite]
     type = FileMeshGenerator
     file = 'nt_mesh_coarse_in.e'
@@ -71,10 +71,11 @@
     diffusivity = 'k'
   []
   [source]
-    type = HeatSource
+    type = GammaHeatSource
     variable = T_solid
     block = '0 1 2'
-    function = graphite_heat_func
+    average_fission_heat = 1
+    gamma = gamma_func
   []
 []
 
@@ -91,11 +92,20 @@
     v = T_solid
     block = '0 1 2'
   []
-  [heat_source]
+  [heat_source_fluid]
     type = FissionHeatSourceAux
     variable = heat
     tot_fission_heat = total_heat
-    power = ${fparse 8e6 / 11}
+    power = ${fparse 8e6 / 11 * (1 - 0.078)}
+  []
+[]
+
+[Functions]
+  [gamma_func]
+    type = ParsedFunction
+    expression = '8e6 / 11 * 0.078 / volume'
+    symbol_names = 'volume'
+    symbol_values = 'graphite_volume'
   []
 []
 
@@ -131,13 +141,6 @@
     boundary = '100'
     htc = h_wall
     T_infinity = T_fluid
-  []
-[]
-
-[Functions]
-  [graphite_heat_func]
-    type = ParsedFunction
-    expression = '1'
   []
 []
 
@@ -232,6 +235,11 @@
   [total_heat]
     type = ElmIntegTotFissHeatPostprocessor
     block = '10 11 15'
+  []
+  [graphite_volume]
+    type = VolumePostprocessor
+    block = '0 1 2'
+    execute_on = initial
   []
 []
 

@@ -7,7 +7,7 @@ inch = 2.54e-2
   # Unit cell
   [circle_cell]
     type = CartesianConcentricCircleAdaptiveBoundaryMeshGenerator
-    num_sectors_per_side = '4 4 4 4'
+    num_sectors_per_side = '2 2 2 2'
     ring_radii = '${radius}'
     ring_intervals = '1'
     ring_block_ids = '11'
@@ -237,7 +237,7 @@ inch = 2.54e-2
   []
   [control_cell]
     type = CartesianConcentricCircleAdaptiveBoundaryMeshGenerator
-    num_sectors_per_side = '10 10 10 10'
+    num_sectors_per_side = '6 6 6 6'
     ring_radii = '${fparse inch-0.1651e-2} ${inch} 3.1992e-2'
     ring_intervals = '1 1 2'
     ring_block_ids = '13 14 15'

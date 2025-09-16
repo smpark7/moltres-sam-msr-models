@@ -233,10 +233,10 @@ def main(input_base_file='input_base.i', input_file='input.i',
     boundary = ' '.join(boundary)
     wall['boundary'] = "'" + boundary + "'"
 
-    # Graphite heat function
-    graphite_heat_func = moosetree.find(
-        sub_root, func=lambda n: n.fullpath == '/Functions/graphite_heat_func')
-    graphite_heat_func['expression'] = "'0.7163e6 * cos(1.53 * z - 1.2677) + 0.0127e6'"
+#    # Graphite heat function
+#    graphite_heat_func = moosetree.find(
+#        sub_root, func=lambda n: n.fullpath == '/Functions/graphite_heat_func')
+#    graphite_heat_func['expression'] = "'0.7163e6 * cos(1.53 * z - 1.2677) + 0.0127e6'"
 
     # Graphite material properties
     graphite = moosetree.find(

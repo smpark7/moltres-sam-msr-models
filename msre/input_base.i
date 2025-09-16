@@ -121,6 +121,7 @@
     type = FullSolveMultiApp
     app_type = MoltresApp
     library_path = '/work/10525/smpark3/ls6/projects/moltres/lib'
+#    library_path = '/home/smpark/projects/moltres-sam/lib'
     positions = '0 0 0'
     input_files = 'input_sub.i'
     execute_on = timestep_end
