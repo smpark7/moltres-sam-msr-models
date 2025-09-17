@@ -3,6 +3,8 @@
   global_init_V = 0.25
   global_init_T = 900
   scaling_factor_var = '1 1e-3 1e-6'
+  [PBModelParams]
+  []
 []
 
 [AuxVariables]
@@ -28,13 +30,11 @@
     type = PBOneDFluidComponent
     eos = eos
     orientation = '0 0 1'
-    f = 0
   []
   [upper_plenum]
     type = PBOneDFluidComponent
     eos = eos
     orientation = '0 0 1'
-    f = 0
   []
   [lower_branch]
     type = PBBranch
@@ -63,7 +63,6 @@
     type = PBOneDFluidComponentParameters
     eos = eos
     orientation = '0 0 1'
-    f = 0
   []
 []
 

@@ -10,6 +10,7 @@ Functions:
 import pyhit
 import moosetree
 import numpy as np
+import json
 from math import pi
 from sys import argv
 
@@ -56,6 +57,21 @@ def main(input_base_file='input_base.i', input_file='input.i',
 
     # Read base input file
     root = pyhit.load(input_base_file)
+
+    # Read precursor decay constants from group constant json file
+    with open('openmc/xs-data/msre_si.json', 'r') as file:
+        xsdata = json.load(file)
+    decay_constants = \
+        "'" + " ".join(map(str, xsdata['fuel']['900']['DECAY_CONSTANT'])) + "'"
+
+    # PBModelParams
+    pb_model_params = moosetree.find(
+        root,
+        func=lambda n: n.fullpath == '/GlobalParams/PBModelParams')
+    pb_model_params['passive_scalar'] = "'pre1 pre2 pre3 pre4 pre5 pre6'"
+    pb_model_params['passive_scalar_decay_constant'] = decay_constants
+    pb_model_params['global_init_ps'] = "'0 0 0 0 0 0'"
+    pb_model_params['ps_scaling_factor'] = "'1e-6 1e-6 1e-6 1e-6 1e-6 1e-6'"
 
     # Shared input parameters among pipe Components
     pipe_input = moosetree.find(
@@ -140,6 +156,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
             pipe['position'] = f"'{x_pos} {y_pos} {lower_plenum_height}'"
             pipe['length'] = core_height
             pipe['n_elems'] = 68
+            pipe['scalar_source'] = "'1e6 1e6 1e6 1e6 1e6 1e6'"
 
             heat_transfer_name = 'heat_flux_' + str(i) + str(j)
             components.append(heat_transfer_name)
@@ -341,6 +358,9 @@ def main(input_base_file='input_base.i', input_file='input.i',
     T_fluid_transfer = moosetree.find(
         root, func=lambda n: n.fullpath == '/Transfers/T_fluid_to_sub_block')
     T_fluid_transfer['to_blocks'] = blocks_2
+
+    # Vacuum boundary definitions
+    nt_action['vacuum_boundaries'] = "'106 107'"
 
 #            T_fluid_name = 'T_fluid_from_sub_' + str(i) + str(j)
 #            transfers.append(T_fluid_name)
