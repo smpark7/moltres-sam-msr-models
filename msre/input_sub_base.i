@@ -61,6 +61,30 @@
     family = MONOMIAL
     order = SECOND
   []
+  [pre1_source]
+    family = MONOMIAL
+    order = SECOND
+  []
+  [pre2_source]
+    family = MONOMIAL
+    order = SECOND
+  []
+  [pre3_source]
+    family = MONOMIAL
+    order = SECOND
+  []
+  [pre4_source]
+    family = MONOMIAL
+    order = SECOND
+  []
+  [pre5_source]
+    family = MONOMIAL
+    order = SECOND
+  []
+  [pre6_source]
+    family = MONOMIAL
+    order = SECOND
+  []
 []
 
 [Kernels]
@@ -97,6 +121,36 @@
     variable = heat
     tot_fission_heat = total_heat
     power = ${fparse 8e6 / 11 * (1 - 0.078)}
+  []
+  [pre1_source]
+    type = PrecursorSourceAux
+    variable = pre1_source
+    precursor_group_number = 1
+  []
+  [pre2_source]
+    type = PrecursorSourceAux
+    variable = pre2_source
+    precursor_group_number = 2
+  []
+  [pre3_source]
+    type = PrecursorSourceAux
+    variable = pre3_source
+    precursor_group_number = 3
+  []
+  [pre4_source]
+    type = PrecursorSourceAux
+    variable = pre4_source
+    precursor_group_number = 4
+  []
+  [pre5_source]
+    type = PrecursorSourceAux
+    variable = pre5_source
+    precursor_group_number = 5
+  []
+  [pre6_source]
+    type = PrecursorSourceAux
+    variable = pre6_source
+    precursor_group_number = 6
   []
 []
 
@@ -154,6 +208,8 @@
   type = Eigenvalue
   free_power_iterations = 2
   initial_eigenvalue = 1
+  normal_factor = '${fparse 8e6 / 11}'
+  normalization = total_heat
 
   solve_type = 'PJFNK'
   petsc_options_iname = '-pc_type -pc_hypre_type -pc_hypre_boomeramg_strong_threshold -pc_hypre_boomeramg_agg_nl -pc_hypre_boomeramg_agg_num_paths -pc_hypre_boomeramg_max_levels -pc_hypre_boomeramg_coarsen_type -pc_hypre_boomeramg_interp_type -pc_hypre_boomeramg_P_max -pc_hypre_boomeramg_truncfactor -ksp_gmres_restart'
@@ -235,6 +291,7 @@
   [total_heat]
     type = ElmIntegTotFissHeatPostprocessor
     block = '10 11 15'
+    execute_on = linear
   []
   [graphite_volume]
     type = VolumePostprocessor

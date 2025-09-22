@@ -70,8 +70,8 @@ def main(input_base_file='input_base.i', input_file='input.i',
         func=lambda n: n.fullpath == '/GlobalParams/PBModelParams')
     pb_model_params['passive_scalar'] = "'pre1 pre2 pre3 pre4 pre5 pre6'"
     pb_model_params['passive_scalar_decay_constant'] = decay_constants
-    pb_model_params['global_init_ps'] = "'0 0 0 0 0 0'"
-    pb_model_params['ps_scaling_factor'] = "'1e-6 1e-6 1e-6 1e-6 1e-6 1e-6'"
+    pb_model_params['global_init_PS'] = "'1e10 1e10 1e10 1e10 1e10 1e10'"
+    pb_model_params['PS_scaling_factor'] = "'1e-20 1e-20 1e-20 1e-20 1e-20 1e-20'"
 
     # Shared input parameters among pipe Components
     pipe_input = moosetree.find(
@@ -156,7 +156,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
             pipe['position'] = f"'{x_pos} {y_pos} {lower_plenum_height}'"
             pipe['length'] = core_height
             pipe['n_elems'] = 68
-            pipe['scalar_source'] = "'1e6 1e6 1e6 1e6 1e6 1e6'"
+            # pipe['scalar_source_var'] = "'pre1_source pre2_source pre3_source pre4_source pre5_source pre6_source'"
 
             heat_transfer_name = 'heat_flux_' + str(i) + str(j)
             components.append(heat_transfer_name)
@@ -266,6 +266,8 @@ def main(input_base_file='input_base.i', input_file='input.i',
         sub_root, func=lambda n: n.fullpath == '/UserObjects')
     transfers = moosetree.find(
         root, func=lambda n: n.fullpath == '/Transfers')
+    kernels = moosetree.find(
+        root, func=lambda n: n.fullpath == '/Kernels')
     for i in range(nx-1):
         for j in range(nx-1):
             if i == center_idx[0] and j == center_idx[0]:
@@ -283,7 +285,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
             T_wall_uo['num_layers'] = 170
             T_wall_uo['boundary'] = '2' + str(i) + str(j)
             T_wall_uo['execute_on'] = "'initial timestep_end'"
-            T_wall_uo['sample_type'] = 'interpolate'
+            T_wall_uo['sample_type'] = 'direct'
 
             T_wall_transfer_name = 'T_wall_from_sub_' + str(i) + str(j)
             transfers.append(T_wall_transfer_name)
@@ -313,7 +315,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
                 block = f"'{200 + i * 10 + j} {300 + i * 10 + j}'"
             heat_uo['block'] = block
             heat_uo['execute_on'] = "'initial timestep_end'"
-            heat_uo['sample_type'] = 'interpolate'
+            heat_uo['sample_type'] = 'direct'
 
             heat_transfer_name = 'heat_from_sub_' + str(i) + str(j)
             transfers.append(heat_transfer_name)
@@ -328,6 +330,57 @@ def main(input_base_file='input_base.i', input_file='input.i',
             heat_transfer['to_blocks'] = 'pipe_' + str(i) + str(j)
             heat_transfer['search_value_conflicts'] = 'false'
 
+            for k in range(1, 7):
+                prec_uo_name = 'pre' + str(k) + '_uo_' + str(i) + str(j)
+                uo.append(prec_uo_name)
+                prec_uo = moosetree.find(
+                    sub_root,
+                    func=lambda n: n.fullpath == '/UserObjects/' + prec_uo_name)
+                prec_uo['type'] = 'LayeredAverage'
+                prec_uo['variable'] = 'pre' + str(k) + '_source'
+                prec_uo['direction'] = 'z'
+                prec_uo['num_layers'] = 170
+                if i == 4 and j == 4:
+                    block = '244'
+                else:
+                    block = f"'{200 + i * 10 + j} {300 + i * 10 + j}'"
+                prec_uo['block'] = block
+                prec_uo['execute_on'] = "'initial timestep_end'"
+                prec_uo['sample_type'] = 'direct'
+
+                prec_transfer_name = 'pre' + str(k) + '_from_sub_' + str(i) + str(j)
+                transfers.append(prec_transfer_name)
+                prec_transfer = moosetree.find(
+                    root,
+                    func=lambda n: n.fullpath == '/Transfers/' + prec_transfer_name)
+                prec_transfer['type'] = 'MultiAppGeneralFieldUserObjectTransfer'
+                prec_transfer['from_multi_app'] = 'sub'
+                prec_transfer['source_user_object'] = prec_uo_name
+                prec_transfer['variable'] = 'pre' + str(k) + '_source'
+                prec_transfer['displaced_target_mesh'] = 'true'
+                prec_transfer['to_blocks'] = 'pipe_' + str(i) + str(j)
+                prec_transfer['search_value_conflicts'] = 'false'
+
+#                prec_source_name = 'pre' + str(k) + '_' + str(i) + str(j)
+#                kernels.append(prec_source_name)
+#                prec_source = moosetree.find(
+#                    root,
+#                    func=lambda n: n.fullpath == '/Kernels/' + prec_source_name)
+#                prec_source['type'] = 'CoupledForce'
+#                prec_source['variable'] = 'pre' + str(k)
+#                prec_source['block'] = 'pipe_' + str(i) + str(j)
+#                prec_source['v'] = 'pre' + str(k) + '_source'
+#
+#                prec_supg_name = 'pre' + str(k) + '_supg_' + str(i) + str(j)
+#                kernels.append(prec_supg_name)
+#                prec_supg = moosetree.find(
+#                    root,
+#                    func=lambda n: n.fullpath == '/Kernels/' + prec_supg_name)
+#                prec_supg['type'] = 'CoupledForceSUPG'
+#                prec_supg['variable'] = 'pre' + str(k)
+#                prec_supg['block'] = 'pipe_' + str(i) + str(j)
+#                prec_supg['coupled_variable'] = 'pre' + str(k) + '_source'
+
     # Channel block definitions
     blocks = [str(int(n)) for i, n in enumerate(np.linspace(200, 399, 200))
                 if i not in [45, 54, 55, 144, 145, 154, 155]]
@@ -339,6 +392,10 @@ def main(input_base_file='input_base.i', input_file='input.i',
     heat_aux = moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/AuxVariables/heat')
     heat_aux['block'] = blocks
+    for k in range(1, 7):
+        prec_aux = moosetree.find(
+            sub_root, func=lambda n: n.fullpath == '/AuxVariables/pre'+str(k)+'_source')
+        prec_aux['block'] = blocks
     temp_aux = moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/AuxKernels/temperature_fluid')
     temp_aux['block'] = blocks

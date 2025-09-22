@@ -12,6 +12,18 @@
   []
   [heat]
   []
+  [pre1_source]
+  []
+  [pre2_source]
+  []
+  [pre3_source]
+  []
+  [pre4_source]
+  []
+  [pre5_source]
+  []
+  [pre6_source]
+  []
 []
 
 [EOS]
@@ -66,6 +78,69 @@
   []
 []
 
+[Kernels]
+  [pre1_source]
+    type = CoupledForce
+    variable = pre1
+    v = pre1_source
+  []
+  [pre2_source]
+    type = CoupledForce
+    variable = pre2
+    v = pre2_source
+  []
+  [pre3_source]
+    type = CoupledForce
+    variable = pre3
+    v = pre3_source
+  []
+  [pre4_source]
+    type = CoupledForce
+    variable = pre4
+    v = pre4_source
+  []
+  [pre5_source]
+    type = CoupledForce
+    variable = pre5
+    v = pre5_source
+  []
+  [pre6_source]
+    type = CoupledForce
+    variable = pre6
+    v = pre6_source
+  []
+  [pre1_supg]
+    type = CoupledForceSUPG
+    variable = pre1
+    coupled_variable = pre1_source
+  []
+  [pre2_supg]
+    type = CoupledForceSUPG
+    variable = pre2
+    coupled_variable = pre2_source
+  []
+  [pre3_supg]
+    type = CoupledForceSUPG
+    variable = pre3
+    coupled_variable = pre3_source
+  []
+  [pre4_supg]
+    type = CoupledForceSUPG
+    variable = pre4
+    coupled_variable = pre4_source
+  []
+  [pre5_supg]
+    type = CoupledForceSUPG
+    variable = pre5
+    coupled_variable = pre5_source
+  []
+  [pre6_supg]
+    type = CoupledForceSUPG
+    variable = pre6
+    coupled_variable = pre6_source
+  []
+[]
+
 [Functions]
   [rho_func]
     type = PiecewiseLinear
@@ -92,7 +167,7 @@
 #  type = Steady
   type = Transient
   dt = 1
-  end_time = 20
+  end_time = 5
 
   petsc_options_iname = '-ksp_gmres_restart'
   petsc_options_value = '100'
