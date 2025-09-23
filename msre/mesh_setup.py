@@ -15,7 +15,8 @@ from sys import argv
 # Base geometry specifications
 # Replace with imports once msr_progression_problem_tools.py is refactored
 core_height = 170.027e-2  # m
-lower_plenum_height = 0.1875
+lower_plenum_height = 0.1875 # m
+upper_plenum_height = 0.2540 # m
 stringer_pitch = 5.08e-2  # m
 fuel_channel_r = 0.508e-2  # m
 fuel_channel_a = 2.032e-2  # m
@@ -43,8 +44,11 @@ def main(mesh_base_file='nt_mesh_quad_base.i',
     # Extrude 3D
     extrude = moosetree.find(
         root, func=lambda n: n.fullpath == '/Mesh/extrude')
-    extrude['heights'] = f"'{core_height}'"
-    extrude['num_layers'] = 34
+    extrude['heights'] = \
+        f"'{lower_plenum_height} {core_height} {upper_plenum_height}'"
+    extrude['num_layers'] = "'4 34 5'"
+    extrude['subdomain_swaps'] = \
+        "'0 3 1 4 2 3 10 3 11 4 15 3; ; 0 5 1 6 2 5 10 5 11 6 15 5'"
 #    mesh_num = int(np.ceil(core_height / axial_mesh_size))
 #    extrude['num_layers'] = f"'{mesh_num}'"
 #    extrude['heights'] = f"'{thimble_tip_position} {thimble_length}'"

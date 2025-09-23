@@ -351,15 +351,15 @@ inch = 2.54e-2
 #    bottom_boundary = 5
 #    top_boundary = 6
   []
-  [transform_up]
-    type = TransformGenerator
-    input = extrude
-    transform = TRANSLATE
-    vector_value = '0 0 0.1875'
-  []
+#  [transform_up]
+#    type = TransformGenerator
+#    input = extrude
+#    transform = TRANSLATE
+#    vector_value = '0 0 0.1875'
+#  []
   [graphite_bounds]
     type = SideSetsBetweenSubdomainsGenerator
-    input = transform_up
+    input = extrude
     new_boundary = 100
     primary_block = '0 2'
     paired_block = '10 11 15'
