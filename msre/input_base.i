@@ -14,18 +14,8 @@
   []
   [neutron_source]
   []
-#  [pre1_source]
-#  []
-#  [pre2_source]
-#  []
-#  [pre3_source]
-#  []
-#  [pre4_source]
-#  []
-#  [pre5_source]
-#  []
-#  [pre6_source]
-#  []
+  [delayed_neutron_source]
+  []
 []
 
 [EOS]
@@ -140,6 +130,15 @@
     type = CoupledForceSUPG
     variable = pre6
     coupled_variable = neutron_source
+  []
+[]
+
+[AuxKernels]
+  [delayed_neutron]
+    type = ParsedAux
+    variable = delayed_neutron_source
+    coupled_variables = 'pre1 pre2 pre3 pre4 pre5 pre6'
+    expression = ''
   []
 []
 
@@ -272,6 +271,24 @@
     variable = h_wall
     displaced_source_mesh = true
     to_boundaries = '244'
+    from_blocks = 'pipe_44'
+    search_value_conflicts = false
+  []
+  [delayed_neutron_to_sub]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = delayed_neutron_source
+    variable = delayed_neutron_source
+    displaced_source_mesh = true
+    search_value_conflicts = false
+  []
+  [delayed_neutron_to_sub_control_channel]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = delayed_neutron_source
+    variable = delayed_neutron_source
+    displaced_source_mesh = true
+    to_blocks = '244'
     from_blocks = 'pipe_44'
     search_value_conflicts = false
   []

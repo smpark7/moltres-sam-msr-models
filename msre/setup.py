@@ -61,8 +61,9 @@ def main(input_base_file='input_base.i', input_file='input.i',
     # Read precursor decay constants from group constant json file
     with open('openmc/xs-data/msre_si.json', 'r') as file:
         xsdata = json.load(file)
-    decay_constants = \
-        "'" + " ".join(map(str, xsdata['fuel']['900']['DECAY_CONSTANT'])) + "'"
+    decay_constants = xsdata['fuel']['900']['DECAY_CONSTANT']
+    decay_constants_str = \
+        "'" + " ".join(map(str, decay_constants)) + "'"
     beta = xsdata['fuel']['900']['BETA_EFF']
 
     # PBModelParams
@@ -70,9 +71,25 @@ def main(input_base_file='input_base.i', input_file='input.i',
         root,
         func=lambda n: n.fullpath == '/GlobalParams/PBModelParams')
     pb_model_params['passive_scalar'] = "'pre1 pre2 pre3 pre4 pre5 pre6'"
-    pb_model_params['passive_scalar_decay_constant'] = decay_constants
+    pb_model_params['passive_scalar_decay_constant'] = decay_constants_str
     pb_model_params['global_init_PS'] = "'0 0 0 0 0 0'"
     pb_model_params['PS_scaling_factor'] = "'1e-0 1e-0 1e-0 1e-0 1e-0 1e-0'"
+
+    # Delayed neutron source auxkernels
+    delayed_neutron_aux = moosetree.find(
+        root,
+        func=lambda n: n.fullpath == '/AuxKernels/delayed_neutron')
+    expression = "'("
+    for k in range(1, 7):
+        # Delayed neutron source contribution from precursor group k
+        expression += \
+                f"{decay_constants[k-1]} * pre" + str(k)
+        if k != 6:
+            expression += ' + '
+        else:
+            # Scale back up by 1e15
+            expression += ") * 1e15'"
+    delayed_neutron_aux['expression'] = expression
 
     # Shared input parameters among pipe Components
     pipe_input = moosetree.find(
@@ -447,6 +464,10 @@ def main(input_base_file='input_base.i', input_file='input.i',
 #    T_fluid_transfer = moosetree.find(
 #        root, func=lambda n: n.fullpath == '/Transfers/T_fluid_to_sub_block')
     T_fluid_transfer['to_blocks'] = blocks_2
+    delayed_neutron_transfer = moosetree.find(
+        root,
+        func=lambda n: n.fullpath == '/Transfers/delayed_neutron_to_sub')
+    delayed_neutron_transfer['to_blocks'] = blocks_2
 
     for k in range(1, 7):
         # Scale neutron source by beta_eff for precursor source
@@ -459,34 +480,33 @@ def main(input_base_file='input_base.i', input_file='input.i',
             func=lambda n: n.fullpath == '/Kernels/pre' + str(k) + '_supg')
         prec_source_supg['scale_factor'] = beta[k-1]
 
-
-        # Transfer advected precursor distribution to Moltres
-        prec_dist_transfer_name = 'pre' + str(k) + '_to_sub'
-        transfers.append(prec_dist_transfer_name)
-        prec_dist_transfer = moosetree.find(
-            root,
-            func=lambda n: n.fullpath == '/Transfers/' + prec_dist_transfer_name)
-        prec_dist_transfer['type'] = 'MultiAppGeneralFieldNearestLocationTransfer'
-        prec_dist_transfer['to_multi_app'] = 'sub'
-        prec_dist_transfer['source_variable'] = 'pre' + str(k)
-        prec_dist_transfer['variable'] = 'pre' + str(k)
-        prec_dist_transfer['displaced_source_mesh'] = 'true'
-        prec_dist_transfer['to_blocks'] = blocks_2
-        prec_dist_transfer['search_value_conflicts'] = 'false'
-
-        prec_cc_transfer_name = 'pre' + str(k) + '_to_sub_control_channel'
-        transfers.append(prec_cc_transfer_name)
-        prec_cc_transfer = moosetree.find(
-            root,
-            func=lambda n: n.fullpath == '/Transfers/' + prec_cc_transfer_name)
-        prec_cc_transfer['type'] = 'MultiAppGeneralFieldNearestLocationTransfer'
-        prec_cc_transfer['to_multi_app'] = 'sub'
-        prec_cc_transfer['source_variable'] = 'pre' + str(k)
-        prec_cc_transfer['variable'] = 'pre' + str(k)
-        prec_cc_transfer['displaced_source_mesh'] = 'true'
-        prec_cc_transfer['to_blocks'] = '244'
-        prec_cc_transfer['from_blocks'] = 'pipe_44'
-        prec_cc_transfer['search_value_conflicts'] = 'false'
+#        # Transfer advected precursor distribution to Moltres
+#        prec_dist_transfer_name = 'pre' + str(k) + '_to_sub'
+#        transfers.append(prec_dist_transfer_name)
+#        prec_dist_transfer = moosetree.find(
+#            root,
+#            func=lambda n: n.fullpath == '/Transfers/' + prec_dist_transfer_name)
+#        prec_dist_transfer['type'] = 'MultiAppGeneralFieldNearestLocationTransfer'
+#        prec_dist_transfer['to_multi_app'] = 'sub'
+#        prec_dist_transfer['source_variable'] = 'pre' + str(k)
+#        prec_dist_transfer['variable'] = 'pre' + str(k)
+#        prec_dist_transfer['displaced_source_mesh'] = 'true'
+#        prec_dist_transfer['to_blocks'] = blocks_2
+#        prec_dist_transfer['search_value_conflicts'] = 'false'
+#
+#        prec_cc_transfer_name = 'pre' + str(k) + '_to_sub_control_channel'
+#        transfers.append(prec_cc_transfer_name)
+#        prec_cc_transfer = moosetree.find(
+#            root,
+#            func=lambda n: n.fullpath == '/Transfers/' + prec_cc_transfer_name)
+#        prec_cc_transfer['type'] = 'MultiAppGeneralFieldNearestLocationTransfer'
+#        prec_cc_transfer['to_multi_app'] = 'sub'
+#        prec_cc_transfer['source_variable'] = 'pre' + str(k)
+#        prec_cc_transfer['variable'] = 'pre' + str(k)
+#        prec_cc_transfer['displaced_source_mesh'] = 'true'
+#        prec_cc_transfer['to_blocks'] = '244'
+#        prec_cc_transfer['from_blocks'] = 'pipe_44'
+#        prec_cc_transfer['search_value_conflicts'] = 'false'
 
     # Vacuum boundary definitions
     nt_action['vacuum_boundaries'] = "'106 107'"
