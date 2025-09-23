@@ -61,27 +61,55 @@
     family = MONOMIAL
     order = SECOND
   []
-  [pre1_source]
+#  [pre1_source]
+#    family = MONOMIAL
+#    order = SECOND
+#  []
+#  [pre2_source]
+#    family = MONOMIAL
+#    order = SECOND
+#  []
+#  [pre3_source]
+#    family = MONOMIAL
+#    order = SECOND
+#  []
+#  [pre4_source]
+#    family = MONOMIAL
+#    order = SECOND
+#  []
+#  [pre5_source]
+#    family = MONOMIAL
+#    order = SECOND
+#  []
+#  [pre6_source]
+#    family = MONOMIAL
+#    order = SECOND
+#  []
+  [neutron_source]
     family = MONOMIAL
     order = SECOND
   []
-  [pre2_source]
+  [pre1]
     family = MONOMIAL
     order = SECOND
   []
-  [pre3_source]
+  [pre2]
     family = MONOMIAL
     order = SECOND
   []
-  [pre4_source]
+  [pre3]
     family = MONOMIAL
     order = SECOND
   []
-  [pre5_source]
+  [pre4]
     family = MONOMIAL
     order = SECOND
   []
-  [pre6_source]
+  [pre5]
+    family = MONOMIAL
+    order = SECOND
+  []
+  [pre6]
     family = MONOMIAL
     order = SECOND
   []
@@ -122,36 +150,47 @@
     tot_fission_heat = total_heat
     power = ${fparse 8e6 / 11 * (1 - 0.078)}
   []
-  [pre1_source]
-    type = PrecursorSourceAux
-    variable = pre1_source
-    precursor_group_number = 1
+  [nt_source]
+    type = NeutronSourceAux
+    variable = neutron_source
+    nt_scale = 1e-15
   []
-  [pre2_source]
-    type = PrecursorSourceAux
-    variable = pre2_source
-    precursor_group_number = 2
-  []
-  [pre3_source]
-    type = PrecursorSourceAux
-    variable = pre3_source
-    precursor_group_number = 3
-  []
-  [pre4_source]
-    type = PrecursorSourceAux
-    variable = pre4_source
-    precursor_group_number = 4
-  []
-  [pre5_source]
-    type = PrecursorSourceAux
-    variable = pre5_source
-    precursor_group_number = 5
-  []
-  [pre6_source]
-    type = PrecursorSourceAux
-    variable = pre6_source
-    precursor_group_number = 6
-  []
+#  [pre1_source]
+#    type = PrecursorSourceAux
+#    variable = pre1_source
+#    precursor_group_number = 1
+#    prec_scale = 1e-15
+#  []
+#  [pre2_source]
+#    type = PrecursorSourceAux
+#    variable = pre2_source
+#    precursor_group_number = 2
+#    prec_scale = 1e-15
+#  []
+#  [pre3_source]
+#    type = PrecursorSourceAux
+#    variable = pre3_source
+#    precursor_group_number = 3
+#    prec_scale = 1e-15
+#  []
+#  [pre4_source]
+#    type = PrecursorSourceAux
+#    variable = pre4_source
+#    precursor_group_number = 4
+#    prec_scale = 1e-15
+#  []
+#  [pre5_source]
+#    type = PrecursorSourceAux
+#    variable = pre5_source
+#    precursor_group_number = 5
+#    prec_scale = 1e-15
+#  []
+#  [pre6_source]
+#    type = PrecursorSourceAux
+#    variable = pre6_source
+#    precursor_group_number = 6
+#    prec_scale = 1e-15
+#  []
 []
 
 [Functions]

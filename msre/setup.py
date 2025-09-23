@@ -63,6 +63,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
         xsdata = json.load(file)
     decay_constants = \
         "'" + " ".join(map(str, xsdata['fuel']['900']['DECAY_CONSTANT'])) + "'"
+    beta = xsdata['fuel']['900']['BETA_EFF']
 
     # PBModelParams
     pb_model_params = moosetree.find(
@@ -70,8 +71,8 @@ def main(input_base_file='input_base.i', input_file='input.i',
         func=lambda n: n.fullpath == '/GlobalParams/PBModelParams')
     pb_model_params['passive_scalar'] = "'pre1 pre2 pre3 pre4 pre5 pre6'"
     pb_model_params['passive_scalar_decay_constant'] = decay_constants
-    pb_model_params['global_init_PS'] = "'1e10 1e10 1e10 1e10 1e10 1e10'"
-    pb_model_params['PS_scaling_factor'] = "'1e-20 1e-20 1e-20 1e-20 1e-20 1e-20'"
+    pb_model_params['global_init_PS'] = "'0 0 0 0 0 0'"
+    pb_model_params['PS_scaling_factor'] = "'1e-0 1e-0 1e-0 1e-0 1e-0 1e-0'"
 
     # Shared input parameters among pipe Components
     pipe_input = moosetree.find(
@@ -330,36 +331,66 @@ def main(input_base_file='input_base.i', input_file='input.i',
             heat_transfer['to_blocks'] = 'pipe_' + str(i) + str(j)
             heat_transfer['search_value_conflicts'] = 'false'
 
-            for k in range(1, 7):
-                prec_uo_name = 'pre' + str(k) + '_uo_' + str(i) + str(j)
-                uo.append(prec_uo_name)
-                prec_uo = moosetree.find(
-                    sub_root,
-                    func=lambda n: n.fullpath == '/UserObjects/' + prec_uo_name)
-                prec_uo['type'] = 'LayeredAverage'
-                prec_uo['variable'] = 'pre' + str(k) + '_source'
-                prec_uo['direction'] = 'z'
-                prec_uo['num_layers'] = 170
-                if i == 4 and j == 4:
-                    block = '244'
-                else:
-                    block = f"'{200 + i * 10 + j} {300 + i * 10 + j}'"
-                prec_uo['block'] = block
-                prec_uo['execute_on'] = "'initial timestep_end'"
-                prec_uo['sample_type'] = 'direct'
+            nt_source_uo_name = 'neutron_source_uo_' + str(i) + str(j)
+            uo.append(nt_source_uo_name)
+            nt_source_uo = moosetree.find(
+                sub_root,
+                func=lambda n: n.fullpath == '/UserObjects/' + nt_source_uo_name)
+            nt_source_uo['type'] = 'LayeredAverage'
+            nt_source_uo['variable'] = 'neutron_source'
+            nt_source_uo['direction'] = 'z'
+            nt_source_uo['num_layers'] = 170
+            if i == 4 and j == 4:
+                block = '244'
+            else:
+                block = f"'{200 + i * 10 + j} {300 + i * 10 + j}'"
+            nt_source_uo['block'] = block
+            nt_source_uo['execute_on'] = "'initial timestep_end'"
+            nt_source_uo['sample_type'] = 'direct'
 
-                prec_transfer_name = 'pre' + str(k) + '_from_sub_' + str(i) + str(j)
-                transfers.append(prec_transfer_name)
-                prec_transfer = moosetree.find(
-                    root,
-                    func=lambda n: n.fullpath == '/Transfers/' + prec_transfer_name)
-                prec_transfer['type'] = 'MultiAppGeneralFieldUserObjectTransfer'
-                prec_transfer['from_multi_app'] = 'sub'
-                prec_transfer['source_user_object'] = prec_uo_name
-                prec_transfer['variable'] = 'pre' + str(k) + '_source'
-                prec_transfer['displaced_target_mesh'] = 'true'
-                prec_transfer['to_blocks'] = 'pipe_' + str(i) + str(j)
-                prec_transfer['search_value_conflicts'] = 'false'
+            nt_source_transfer_name = 'neutron_source_from_sub_' + str(i) + str(j)
+            transfers.append(nt_source_transfer_name)
+            nt_source_transfer = moosetree.find(
+                root,
+                func=lambda n: n.fullpath == '/Transfers/' + nt_source_transfer_name)
+            nt_source_transfer['type'] = 'MultiAppGeneralFieldUserObjectTransfer'
+            nt_source_transfer['from_multi_app'] = 'sub'
+            nt_source_transfer['source_user_object'] = nt_source_uo_name
+            nt_source_transfer['variable'] = 'neutron_source'
+            nt_source_transfer['displaced_target_mesh'] = 'true'
+            nt_source_transfer['to_blocks'] = 'pipe_' + str(i) + str(j)
+            nt_source_transfer['search_value_conflicts'] = 'false'
+
+#            for k in range(1, 7):
+#                prec_uo_name = 'pre' + str(k) + '_uo_' + str(i) + str(j)
+#                uo.append(prec_uo_name)
+#                prec_uo = moosetree.find(
+#                    sub_root,
+#                    func=lambda n: n.fullpath == '/UserObjects/' + prec_uo_name)
+#                prec_uo['type'] = 'LayeredAverage'
+#                prec_uo['variable'] = 'pre' + str(k) + '_source'
+#                prec_uo['direction'] = 'z'
+#                prec_uo['num_layers'] = 170
+#                if i == 4 and j == 4:
+#                    block = '244'
+#                else:
+#                    block = f"'{200 + i * 10 + j} {300 + i * 10 + j}'"
+#                prec_uo['block'] = block
+#                prec_uo['execute_on'] = "'initial timestep_end'"
+#                prec_uo['sample_type'] = 'direct'
+#
+#                prec_transfer_name = 'pre' + str(k) + '_from_sub_' + str(i) + str(j)
+#                transfers.append(prec_transfer_name)
+#                prec_transfer = moosetree.find(
+#                    root,
+#                    func=lambda n: n.fullpath == '/Transfers/' + prec_transfer_name)
+#                prec_transfer['type'] = 'MultiAppGeneralFieldUserObjectTransfer'
+#                prec_transfer['from_multi_app'] = 'sub'
+#                prec_transfer['source_user_object'] = prec_uo_name
+#                prec_transfer['variable'] = 'pre' + str(k) + '_source'
+#                prec_transfer['displaced_target_mesh'] = 'true'
+#                prec_transfer['to_blocks'] = 'pipe_' + str(i) + str(j)
+#                prec_transfer['search_value_conflicts'] = 'false'
 
 #                prec_source_name = 'pre' + str(k) + '_' + str(i) + str(j)
 #                kernels.append(prec_source_name)
@@ -389,13 +420,14 @@ def main(input_base_file='input_base.i', input_file='input.i',
     nt_action =  moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/Nt')
     nt_action['fission_blocks'] = blocks
+    nt_action['pre_blocks'] = blocks
     heat_aux = moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/AuxVariables/heat')
     heat_aux['block'] = blocks
-    for k in range(1, 7):
-        prec_aux = moosetree.find(
-            sub_root, func=lambda n: n.fullpath == '/AuxVariables/pre'+str(k)+'_source')
-        prec_aux['block'] = blocks
+#    for k in range(1, 7):
+#        prec_aux = moosetree.find(
+#            sub_root, func=lambda n: n.fullpath == '/AuxVariables/pre'+str(k)+'_source')
+#        prec_aux['block'] = blocks
     temp_aux = moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/AuxKernels/temperature_fluid')
     temp_aux['block'] = blocks
@@ -412,9 +444,49 @@ def main(input_base_file='input_base.i', input_file='input.i',
                 if i not in [44, 45, 54, 55, 144, 145, 154, 155]]
     blocks_2 = ' '.join(blocks_2)
     blocks_2 = "'" + blocks_2 + "'"
-    T_fluid_transfer = moosetree.find(
-        root, func=lambda n: n.fullpath == '/Transfers/T_fluid_to_sub_block')
+#    T_fluid_transfer = moosetree.find(
+#        root, func=lambda n: n.fullpath == '/Transfers/T_fluid_to_sub_block')
     T_fluid_transfer['to_blocks'] = blocks_2
+
+    for k in range(1, 7):
+        # Scale neutron source by beta_eff for precursor source
+        prec_source_kernel = moosetree.find(
+            root,
+            func=lambda n: n.fullpath == '/Kernels/pre' + str(k) + '_source')
+        prec_source_kernel['coef'] = beta[k-1]
+        prec_source_supg = moosetree.find(
+            root,
+            func=lambda n: n.fullpath == '/Kernels/pre' + str(k) + '_supg')
+        prec_source_supg['scale_factor'] = beta[k-1]
+
+
+        # Transfer advected precursor distribution to Moltres
+        prec_dist_transfer_name = 'pre' + str(k) + '_to_sub'
+        transfers.append(prec_dist_transfer_name)
+        prec_dist_transfer = moosetree.find(
+            root,
+            func=lambda n: n.fullpath == '/Transfers/' + prec_dist_transfer_name)
+        prec_dist_transfer['type'] = 'MultiAppGeneralFieldNearestLocationTransfer'
+        prec_dist_transfer['to_multi_app'] = 'sub'
+        prec_dist_transfer['source_variable'] = 'pre' + str(k)
+        prec_dist_transfer['variable'] = 'pre' + str(k)
+        prec_dist_transfer['displaced_source_mesh'] = 'true'
+        prec_dist_transfer['to_blocks'] = blocks_2
+        prec_dist_transfer['search_value_conflicts'] = 'false'
+
+        prec_cc_transfer_name = 'pre' + str(k) + '_to_sub_control_channel'
+        transfers.append(prec_cc_transfer_name)
+        prec_cc_transfer = moosetree.find(
+            root,
+            func=lambda n: n.fullpath == '/Transfers/' + prec_cc_transfer_name)
+        prec_cc_transfer['type'] = 'MultiAppGeneralFieldNearestLocationTransfer'
+        prec_cc_transfer['to_multi_app'] = 'sub'
+        prec_cc_transfer['source_variable'] = 'pre' + str(k)
+        prec_cc_transfer['variable'] = 'pre' + str(k)
+        prec_cc_transfer['displaced_source_mesh'] = 'true'
+        prec_cc_transfer['to_blocks'] = '244'
+        prec_cc_transfer['from_blocks'] = 'pipe_44'
+        prec_cc_transfer['search_value_conflicts'] = 'false'
 
     # Vacuum boundary definitions
     nt_action['vacuum_boundaries'] = "'106 107'"
