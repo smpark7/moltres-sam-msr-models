@@ -123,7 +123,8 @@ def main(input_base_file='input_base.i', input_file='input.i',
     lower_plenum['orientation'] = "'0 0 1'"
     lower_plenum['position'] = "'0 0 0'"
     lower_plenum['length'] = lower_plenum_height
-    lower_plenum['n_elems'] = 10
+    lower_plenum['n_elems'] = 4 * 8
+    lower_plenum['heat_source_var'] = 'heat'
 
     # Upper plenum
     upper_plenum = moosetree.find(
@@ -133,7 +134,8 @@ def main(input_base_file='input_base.i', input_file='input.i',
     upper_plenum['orientation'] = "'0 0 1'"
     upper_plenum['position'] = f"'0 0 {lower_plenum_height+core_height}'"
     upper_plenum['length'] = upper_plenum_height
-    upper_plenum['n_elems'] = 10
+    upper_plenum['n_elems'] = 5 * 8
+    upper_plenum['heat_source_var'] = 'heat'
 
     # Grid data
     nx = 11
@@ -173,7 +175,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
                 pipe['input_parameters'] = 'pipe_input'
             pipe['position'] = f"'{x_pos} {y_pos} {lower_plenum_height}'"
             pipe['length'] = core_height
-            pipe['n_elems'] = 68
+            pipe['n_elems'] = 34 * 8
             # pipe['scalar_source_var'] = "'pre1_source pre2_source pre3_source pre4_source pre5_source pre6_source'"
 
             heat_transfer_name = 'heat_flux_' + str(i) + str(j)
@@ -250,9 +252,9 @@ def main(input_base_file='input_base.i', input_file='input.i',
     boundary = [str(int(n)) for i, n in enumerate(np.linspace(200, 299, 100))
                 if i not in [44, 45, 54, 55]]
     boundary = ' '.join(boundary)
-    T_fluid_transfer = moosetree.find(
-        root, func=lambda n:n.fullpath == '/Transfers/T_fluid_to_sub')
-    T_fluid_transfer['to_boundaries'] = "'" + boundary + "'"
+    T_fluid_boundaries_transfer = moosetree.find(
+        root, func=lambda n:n.fullpath == '/Transfers/T_fluid_to_sub_boundaries')
+    T_fluid_boundaries_transfer['to_boundaries'] = "'" + boundary + "'"
     h_wall_transfer = moosetree.find(
         root, func=lambda n:n.fullpath == '/Transfers/h_wall_to_sub')
     h_wall_transfer['to_boundaries'] = "'" + boundary + "'"
@@ -432,42 +434,60 @@ def main(input_base_file='input_base.i', input_file='input.i',
     # Channel block definitions
     blocks = [str(int(n)) for i, n in enumerate(np.linspace(200, 399, 200))
                 if i not in [45, 54, 55, 144, 145, 154, 155]]
-    blocks = ' '.join(blocks)
+    channel_blocks = "'" + ' '.join(blocks) + "'"
+    blocks = '3 4 5 6 ' + ' '.join(blocks)
     blocks = "'" + blocks + "'"
     nt_action =  moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/Nt')
     nt_action['fission_blocks'] = blocks
     nt_action['pre_blocks'] = blocks
+    T_fluid_aux = moosetree.find(
+        sub_root, func=lambda n: n.fullpath == '/AuxVariables/T_fluid')
+    T_fluid_aux['block'] = channel_blocks
     heat_aux = moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/AuxVariables/heat')
     heat_aux['block'] = blocks
-#    for k in range(1, 7):
-#        prec_aux = moosetree.find(
-#            sub_root, func=lambda n: n.fullpath == '/AuxVariables/pre'+str(k)+'_source')
-#        prec_aux['block'] = blocks
+    neutron_source_aux = moosetree.find(
+        sub_root, func=lambda n: n.fullpath == '/AuxVariables/neutron_source')
+    neutron_source_aux['block'] = blocks
+    delayed_neutron_source_aux = moosetree.find(
+        sub_root,
+        func=lambda n: n.fullpath == '/AuxVariables/delayed_neutron_source')
+    delayed_neutron_source_aux['block'] = blocks
     temp_aux = moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/AuxKernels/temperature_fluid')
-    temp_aux['block'] = blocks
+    temp_aux['block'] = channel_blocks
     salt_mat = moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/Materials/salt')
-    salt_mat['block'] = blocks
+    salt_mat['block'] = channel_blocks
     bnorm = moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/Postprocessors/bnorm')
     bnorm['block'] = blocks
     total_heat = moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/Postprocessors/total_heat')
     total_heat['block'] = blocks
+    dnp_min = moosetree.find(
+        sub_root, func=lambda n: n.fullpath == '/Postprocessors/dnp_min')
+    dnp_min['block'] = blocks
     blocks_2 = [str(int(n)) for i, n in enumerate(np.linspace(200, 399, 200))
                 if i not in [44, 45, 54, 55, 144, 145, 154, 155]]
     blocks_2 = ' '.join(blocks_2)
     blocks_2 = "'" + blocks_2 + "'"
-#    T_fluid_transfer = moosetree.find(
-#        root, func=lambda n: n.fullpath == '/Transfers/T_fluid_to_sub_block')
-    T_fluid_transfer['to_blocks'] = blocks_2
+    T_fluid_blocks_transfer = moosetree.find(
+        root,
+        func=lambda n: n.fullpath == '/Transfers/T_fluid_to_sub_block')
+    T_fluid_blocks_transfer['to_blocks'] = blocks_2
     delayed_neutron_transfer = moosetree.find(
         root,
         func=lambda n: n.fullpath == '/Transfers/delayed_neutron_to_sub')
     delayed_neutron_transfer['to_blocks'] = blocks_2
+#    pipes = ['pipe_' + str(int(n))
+#             for i, n in enumerate(np.linspace(200, 299, 100))
+#             if i not in [44, 45, 54, 55]]
+#    pipes = ' '.join(pipes)
+#    pipes = "'" + pipes + "'"
+#    delayed_neutron_transfer['from_blocks'] = pipes
+#    T_fluid_transfer['from_blocks'] = pipes
 
     for k in range(1, 7):
         # Scale neutron source by beta_eff for precursor source

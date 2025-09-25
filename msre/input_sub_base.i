@@ -44,7 +44,7 @@
 [AuxVariables]
   [temperature]
     family = MONOMIAL
-    order = SECOND
+    order = FIRST
   []
   [h_wall]
     family = LAGRANGE
@@ -54,7 +54,18 @@
   []
   [T_fluid]
     family = LAGRANGE
+    order = FIRST
+    initial_condition = 900
+  []
+  [T_wall_fluid]
+    family = LAGRANGE
     order = SECOND
+    block = '0 2'
+    initial_condition = 900
+  []
+  [T_plenum]
+    family = LAGRANGE
+    order = FIRST
     initial_condition = 900
   []
   [heat]
@@ -67,7 +78,7 @@
   []
   [delayed_neutron_source]
     family = MONOMIAL
-    order = SECOND
+    order = FIRST
   []
 []
 
@@ -99,6 +110,12 @@
     variable = temperature
     v = T_solid
     block = '0 1 2'
+  []
+  [temperature_plenum]
+    type = ProjectionAux
+    variable = temperature
+    v = T_plenum
+    block = '3 4 5 6'
   []
   [heat_source_fluid]
     type = FissionHeatSourceAux
@@ -143,6 +160,16 @@
     prop_values = '10.1 2386 2327.5'
     temperature = T_fluid
   []
+  [plenum]
+    type = MoltresJsonMaterial
+    base_file = 'openmc/xs-data/msre_si.json'
+    material_key = 'fuel'
+    block = '3 4 5 6'
+    interp_type = 'linear'
+    prop_names = 'k cp rho'
+    prop_values = '10.1 2386 2327.5'
+    temperature = T_plenum
+  []
 []
 
 [BCs]
@@ -151,11 +178,47 @@
     variable = T_solid
     boundary = '100'
     htc = h_wall
-    T_infinity = T_fluid
+    T_infinity = T_wall_fluid
   []
 []
 
 [UserObjects]
+  [heat_uo_lower_plenum]
+    type = LayeredAverage
+    variable = heat
+    direction = z
+    num_layers = 19
+    block = '3 4'
+    execute_on = 'initial timestep_end'
+    sample_type = direct
+  []
+  [heat_uo_upper_plenum]
+    type = LayeredAverage
+    variable = heat
+    direction = z
+    num_layers = 25
+    block = '5 6'
+    execute_on = 'initial timestep_end'
+    sample_type = direct
+  []
+  [nt_source_uo_lower_plenum]
+    type = LayeredAverage
+    variable = neutron_source
+    direction = z
+    num_layers = 19
+    block = '3 4'
+    execute_on = 'initial timestep_end'
+    sample_type = direct
+  []
+  [nt_source_uo_upper_plenum]
+    type = LayeredAverage
+    variable = neutron_source
+    direction = z
+    num_layers = 25
+    block = '5 6'
+    execute_on = 'initial timestep_end'
+    sample_type = direct
+  []
 []
 
 [Executioner]
@@ -177,55 +240,6 @@
   nl_abs_tol = 1e-8
 #  l_tol = 1e-3
 []
-
-#[MultiApps]
-#  [sub]
-#    type = TransientMultiApp
-#    app_type = SamApp
-#    positions = '0 0 0'
-#    input_files = 'input_sub.i'
-#    execute_on = timestep_end
-#  []
-#[]
-
-#[Transfers]
-#  [T_wall_to_sub]
-#    type = MultiAppGeneralFieldNearestLocationTransfer
-#    to_multi_app = sub
-#    source_variable = T_solid
-#    variable = T_wall
-#    from_blocks = '2'
-#    num_nearest_points = 40
-#    displaced_target_mesh = true
-#    search_value_conflicts = false
-#  []
-#  [T_fluid_from_sub]
-#    type = MultiAppGeneralFieldNearestLocationTransfer
-#    from_multi_app = sub
-#    source_variable = temperature
-#    variable = T_fluid
-#    displaced_source_mesh = true
-#    search_value_conflicts = false
-#  []
-#  [T_fluid_from_sub_control_channel]
-#    type = MultiAppGeneralFieldNearestLocationTransfer
-#    from_multi_app = sub
-#    source_variable = temperature
-#    variable = T_fluid
-#    displaced_source_mesh = true
-#    to_boundaries = '244'
-#    from_blocks = 'pipe_44'
-#    search_value_conflicts = false
-#  []
-#  [h_wall_from_sub]
-#    type = MultiAppGeneralFieldNearestLocationTransfer
-#    from_multi_app = sub
-#    source_variable = heat_transfer_coefficient
-#    variable = h_wall
-#    displaced_source_mesh = true
-#    search_value_conflicts = false
-#  []
-#[]
 
 [Postprocessors]
   [bnorm]
@@ -254,6 +268,11 @@
     type = VolumePostprocessor
     block = '0 1 2'
     execute_on = initial
+  []
+  [dnp_min]
+    type = ElementExtremeValue
+    variable = delayed_neutron_source
+    value_type = min
   []
 []
 

@@ -53,13 +53,6 @@
     input = 'upper_plenum(out)'
     eos = eos
   []
-#  [surface_coupling_12]
-#    type = SurfaceCoupling
-#    surface1_name = pipe1:solid:top_wall
-#    surface2_name = pipe2:solid:bottom_wall
-#    coupling_type = GapHeatTransfer
-#    h_gap = 1e9
-#  []
 []
 
 [ComponentInputParameters]
@@ -168,7 +161,7 @@
 #  type = Steady
   type = Transient
   dt = 1
-  end_time = 5
+  end_time = 20
 
   petsc_options_iname = '-ksp_gmres_restart'
   petsc_options_value = '100'
@@ -202,50 +195,36 @@
     execute_on = timestep_end
     keep_solution_during_restore = true
     keep_aux_solution_during_restore = true
-#    catch_up = true
-#    sub_cycling = true
   []
 []
 
 [Transfers]
-#  [T_wall_from_sub]
-#    type = MultiAppGeneralFieldNearestLocationTransfer
-#    from_multi_app = sub
-#    source_variable = T_solid
-#    variable = T_wall
-#    from_blocks = '2'
-#    num_nearest_points = 40
-#    displaced_target_mesh = true
-#    search_value_conflicts = false
-#  []
-  [T_fluid_to_sub]
+  [T_fluid_to_sub_boundaries]
     type = MultiAppGeneralFieldNearestLocationTransfer
     to_multi_app = sub
     source_variable = temperature
-    variable = T_fluid
+    variable = T_wall_fluid
     displaced_source_mesh = true
-    to_blocks = '10 11'
     search_value_conflicts = false
   []
-  [T_fluid_to_sub_control_channel]
+  [T_fluid_to_sub_boundaries_control_channel]
     type = MultiAppGeneralFieldNearestLocationTransfer
     to_multi_app = sub
     source_variable = temperature
-    variable = T_fluid
+    variable = T_wall_fluid
     displaced_source_mesh = true
     to_boundaries = '244'
     from_blocks = 'pipe_44'
     search_value_conflicts = false
   []
-#  [T_fluid_to_sub_block]
-#    type = MultiAppGeneralFieldNearestLocationTransfer
-#    to_multi_app = sub
-#    source_variable = temperature
-#    variable = T_fluid
-#    displaced_source_mesh = true
-#    to_blocks = '10 11'
-#    search_value_conflicts = false
-#  []
+  [T_fluid_to_sub_block]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = temperature
+    variable = T_fluid
+    displaced_source_mesh = true
+    search_value_conflicts = false
+  []
   [T_fluid_to_sub_block_control_channel]
     type = MultiAppGeneralFieldNearestLocationTransfer
     to_multi_app = sub
@@ -254,6 +233,16 @@
     displaced_source_mesh = true
     to_blocks = '244'
     from_blocks = 'pipe_44'
+    search_value_conflicts = false
+  []
+  [T_plenum_to_sub_block_plenum]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = temperature
+    variable = T_plenum
+    displaced_source_mesh = true
+    to_blocks = '3 4 5 6'
+    from_blocks = 'lower_plenum upper_plenum'
     search_value_conflicts = false
   []
   [h_wall_to_sub]
@@ -290,6 +279,52 @@
     displaced_source_mesh = true
     to_blocks = '244'
     from_blocks = 'pipe_44'
+    search_value_conflicts = false
+  []
+  [delayed_neutron_to_sub_plenum]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = delayed_neutron_source
+    variable = delayed_neutron_source
+    displaced_source_mesh = true
+    to_blocks = '3 4 5 6'
+    from_blocks = 'lower_plenum upper_plenum'
+    search_value_conflicts = false
+  []
+  [heat_from_sub_lower_plenum]
+    type = MultiAppGeneralFieldUserObjectTransfer
+    from_multi_app = sub
+    source_user_object = heat_uo_lower_plenum
+    variable = heat
+    displaced_target_mesh = true
+    to_blocks = lower_plenum
+    search_value_conflicts = false
+  []
+  [heat_from_sub_upper_plenum]
+    type = MultiAppGeneralFieldUserObjectTransfer
+    from_multi_app = sub
+    source_user_object = heat_uo_upper_plenum
+    variable = heat
+    displaced_target_mesh = true
+    to_blocks = upper_plenum
+    search_value_conflicts = false
+  []
+  [neutron_source_from_sub_lower_plenum]
+    type = MultiAppGeneralFieldUserObjectTransfer
+    from_multi_app = sub
+    source_user_object = nt_source_uo_lower_plenum
+    variable = neutron_source
+    displaced_target_mesh = true
+    to_blocks = lower_plenum
+    search_value_conflicts = false
+  []
+  [neutron_source_from_sub_upper_plenum]
+    type = MultiAppGeneralFieldUserObjectTransfer
+    from_multi_app = sub
+    source_user_object = nt_source_uo_upper_plenum
+    variable = neutron_source
+    displaced_target_mesh = true
+    to_blocks = upper_plenum
     search_value_conflicts = false
   []
 []
