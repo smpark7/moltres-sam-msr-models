@@ -87,8 +87,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
         if k != 6:
             expression += ' + '
         else:
-            # Scale back up by 1e15
-            expression += ") * 1e15'"
+            expression += ")'"
     delayed_neutron_aux['expression'] = expression
 
     # Shared input parameters among pipe Components
@@ -441,9 +440,6 @@ def main(input_base_file='input_base.i', input_file='input.i',
         sub_root, func=lambda n: n.fullpath == '/Nt')
     nt_action['fission_blocks'] = blocks
     nt_action['pre_blocks'] = blocks
-    T_fluid_aux = moosetree.find(
-        sub_root, func=lambda n: n.fullpath == '/AuxVariables/T_fluid')
-    T_fluid_aux['block'] = channel_blocks
     heat_aux = moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/AuxVariables/heat')
     heat_aux['block'] = blocks
@@ -454,9 +450,6 @@ def main(input_base_file='input_base.i', input_file='input.i',
         sub_root,
         func=lambda n: n.fullpath == '/AuxVariables/delayed_neutron_source')
     delayed_neutron_source_aux['block'] = blocks
-    temp_aux = moosetree.find(
-        sub_root, func=lambda n: n.fullpath == '/AuxKernels/temperature_fluid')
-    temp_aux['block'] = channel_blocks
     salt_mat = moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/Materials/salt')
     salt_mat['block'] = channel_blocks
@@ -466,9 +459,6 @@ def main(input_base_file='input_base.i', input_file='input.i',
     total_heat = moosetree.find(
         sub_root, func=lambda n: n.fullpath == '/Postprocessors/total_heat')
     total_heat['block'] = blocks
-    dnp_min = moosetree.find(
-        sub_root, func=lambda n: n.fullpath == '/Postprocessors/dnp_min')
-    dnp_min['block'] = blocks
     blocks_2 = [str(int(n)) for i, n in enumerate(np.linspace(200, 399, 200))
                 if i not in [44, 45, 54, 55, 144, 145, 154, 155]]
     blocks_2 = ' '.join(blocks_2)

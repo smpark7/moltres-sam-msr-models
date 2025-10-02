@@ -142,6 +142,10 @@
   [mu_func]
     type = PiecewiseLinear
   []
+  [dt_func]
+    type = ParsedFunction
+    expression = 'if(t<10, 1, 2)'
+  []
 []
 
 [UserObjects]
@@ -158,16 +162,17 @@
 []
 
 [Executioner]
-#  type = Steady
   type = Transient
-  dt = 1
-  end_time = 20
+  end_time = 100
+
+  steady_state_detection = true
+  steady_state_start_time = 10
 
   petsc_options_iname = '-ksp_gmres_restart'
   petsc_options_value = '100'
 
-  nl_rel_tol = 1e-7
-  nl_abs_tol = 1e-6
+  nl_rel_tol = 1e-8
+  nl_abs_tol = 1e-8
   nl_max_its = 20
 
   l_tol = 1e-4
@@ -181,6 +186,10 @@
   [Quadrature]
     type = TRAP
     order = FIRST
+  []
+  [TimeStepper]
+    type = FunctionDT
+    function = dt_func
   []
 []
 
@@ -221,7 +230,7 @@
     type = MultiAppGeneralFieldNearestLocationTransfer
     to_multi_app = sub
     source_variable = temperature
-    variable = T_fluid
+    variable = temperature
     displaced_source_mesh = true
     search_value_conflicts = false
   []
@@ -229,7 +238,7 @@
     type = MultiAppGeneralFieldNearestLocationTransfer
     to_multi_app = sub
     source_variable = temperature
-    variable = T_fluid
+    variable = temperature
     displaced_source_mesh = true
     to_blocks = '244'
     from_blocks = 'pipe_44'
@@ -239,7 +248,7 @@
     type = MultiAppGeneralFieldNearestLocationTransfer
     to_multi_app = sub
     source_variable = temperature
-    variable = T_plenum
+    variable = temperature
     displaced_source_mesh = true
     to_blocks = '3 4 5 6'
     from_blocks = 'lower_plenum upper_plenum'
