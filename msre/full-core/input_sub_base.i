@@ -1,191 +1,259 @@
 [GlobalParams]
-  global_init_P = 1.0e5
-  global_init_V = 0.25
-  global_init_T = 900
-  scaling_factor_var = '1 1e-3 1e-6'
+  num_groups = 2
+  num_precursor_groups = 0
+  use_exp_form = false
+  group_fluxes = 'group1 group2'
+  pre_concs = ''
+  sss2_input = true
+  account_delayed = true
+  temperature = temperature
+  delayed_neutron_source = delayed_neutron_source
+[]
+
+[Problem]
+  type = EigenProblem
+  bx_norm = bnorm
+[]
+
+[Mesh]
+  parallel_type = distributed
+  [graphite]
+    type = FileMeshGenerator
+    file = 'mesh_coarse_in.e'
+  []
+[]
+
+[Nt]
+  family = LAGRANGE
+  order = SECOND
+  var_name_base = group
+  fission_blocks = '10 11 15'
+#  pre_blocks = '10 11 15'
+  create_temperature_var = false
+  eigen = true
+[]
+
+[Variables]
+  [T_solid]
+    family = LAGRANGE
+    order = SECOND
+    block = '0 1 2'
+    initial_condition = 900
+  []
 []
 
 [AuxVariables]
-  [T_wall]
+  [temperature]
+    family = MONOMIAL
+    order = SECOND
+    initial_condition = 900
   []
-[]
-
-[EOS]
-  [eos]
-    type = SaltEquationOfState
+  [h_wall]
+    family = LAGRANGE
+    order = SECOND
+    block = '0 2'
+    initial_condition = 3e2
   []
-[]
-
-[Components]
-  [inlet]
-    type = PBTDJ
-    input = 'lower_plenum(in)'
-    eos = eos
+  [T_wall_fluid]
+    family = LAGRANGE
+    order = SECOND
+    block = '0 2'
+    initial_condition = 900
   []
-  [lower_plenum]
-    type = PBOneDFluidComponent
-    eos = eos
-    orientation = '0 0 1'
+  [heat]
+    family = MONOMIAL
+    order = SECOND
   []
-  [upper_plenum]
-    type = PBOneDFluidComponent
-    eos = eos
-    orientation = '0 0 1'
+  [neutron_source]
+    family = MONOMIAL
+    order = SECOND
   []
-  [lower_branch]
-    type = PBBranch
-    eos = eos
-  []
-  [upper_branch]
-    type = PBBranch
-    eos = eos
-  []
-  [outlet]
-    type = PBTDV
-    input = 'upper_plenum(out)'
-    eos = eos
-  []
-#  [surface_coupling_12]
-#    type = SurfaceCoupling
-#    surface1_name = pipe1:solid:top_wall
-#    surface2_name = pipe2:solid:bottom_wall
-#    coupling_type = GapHeatTransfer
-#    h_gap = 1e9
-#  []
-[]
-
-[ComponentInputParameters]
-  [pipe_input]
-    type = PBOneDFluidComponentParameters
-    eos = eos
-  []
-  [control_input]
-    type = PBOneDFluidComponentParameters
-    eos = eos
-  []
-[]
-
-[Functions]
-  [rho_func]
-    type = PiecewiseLinear
-  []
-  [mu_func]
-    type = PiecewiseLinear
-  []
-  [salt_heat_func]
-    type = ParsedFunction
-  []
-[]
-
-[UserObjects]
-[]
-
-[Preconditioning]
-  [SMP_PJFNK]
-    type = SMP
-    full = true
-    solve_type = 'PJFNK'
-    petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
-    petsc_options_value = 'lu superlu_dist'
-  []
-[]
-
-[Executioner]
-#  type = Steady
-  type = Transient
-  dt = 0.1
-  end_time = 10
-
-  petsc_options_iname = '-ksp_gmres_restart'
-  petsc_options_value = '100'
-
-  nl_rel_tol = 1e-7
-  nl_abs_tol = 1e-6
-  nl_max_its = 20
-
-  l_tol = 1e-4
-  l_max_its = 100
-
-  [Quadrature]
-    type = TRAP
+  [delayed_neutron_source]
+    family = MONOMIAL
     order = FIRST
   []
 []
 
+[Kernels]
+  [diffusion]
+    type = MatDiffusion
+    variable = T_solid
+    block = '0 1 2'
+    diffusivity = 'k'
+  []
+  [source]
+    type = GammaHeatSource
+    variable = T_solid
+    block = '0 1 2'
+    average_fission_heat = 1
+    gamma = gamma_func
+  []
+[]
+
+[AuxKernels]
+  [temperature_solid]
+    type = ProjectionAux
+    variable = temperature
+    v = T_solid
+    block = '0 1 2'
+  []
+  [heat_source_fluid]
+    type = FissionHeatSourceAux
+    variable = heat
+    tot_fission_heat = total_heat
+    power = ${fparse 8e6 * (1 - 0.078)}
+  []
+  [nt_source]
+    type = NeutronSourceAux
+    variable = neutron_source
+#    nt_scale = 1e-15
+  []
+[]
+
+[Functions]
+  [gamma_func]
+    type = ParsedFunction
+    expression = '8e6 * 0.078 / volume'
+    symbol_names = 'volume'
+    symbol_values = 'graphite_volume'
+  []
+[]
+
+[Materials]
+  [graphite]
+    type = MoltresJsonMaterial
+    base_file = 'openmc/xs-data/msre_si.json'
+    material_key = 'graphite'
+    block = '0 1 2'
+    interp_type = 'linear'
+    prop_names = 'k cp rho'
+    prop_values = '154.797 1758.46 1860'
+    temperature = T_solid
+  []
+  [salt]
+    type = MoltresJsonMaterial
+    base_file = 'openmc/xs-data/msre_si.json'
+    material_key = 'fuel'
+    block = '10 11 15'
+    interp_type = 'linear'
+    prop_names = 'k cp rho'
+    prop_values = '10.1 2386 2327.5'
+  []
+  [plenum]
+    type = MoltresJsonMaterial
+    base_file = 'openmc/xs-data/msre_si.json'
+    material_key = 'fuel'
+    block = '3 4 5 6'
+    interp_type = 'linear'
+    prop_names = 'k cp rho'
+    prop_values = '10.1 2386 2327.5'
+  []
+[]
+
+[BCs]
+  [wall]
+    type = CoupledConvectiveHeatFluxBC
+    variable = T_solid
+    boundary = '100'
+    htc = h_wall
+    T_infinity = T_wall_fluid
+  []
+[]
+
+[UserObjects]
+  [heat_uo_lower_plenum]
+    type = LayeredAverage
+    variable = heat
+    direction = z
+    num_layers = 19
+    block = '3 4'
+    execute_on = 'initial timestep_end'
+    sample_type = direct
+  []
+  [heat_uo_upper_plenum]
+    type = LayeredAverage
+    variable = heat
+    direction = z
+    num_layers = 25
+    block = '5 6'
+    execute_on = 'initial timestep_end'
+    sample_type = direct
+  []
+  [nt_source_uo_lower_plenum]
+    type = LayeredAverage
+    variable = neutron_source
+    direction = z
+    num_layers = 19
+    block = '3 4'
+    execute_on = 'initial timestep_end'
+    sample_type = direct
+  []
+  [nt_source_uo_upper_plenum]
+    type = LayeredAverage
+    variable = neutron_source
+    direction = z
+    num_layers = 25
+    block = '5 6'
+    execute_on = 'initial timestep_end'
+    sample_type = direct
+  []
+[]
+
+[Executioner]
+  type = Eigenvalue
+  free_power_iterations = 2
+  initial_eigenvalue = 1
+  normal_factor = '1'
+  normalization = bnorm
+
+  solve_type = 'PJFNK'
+  petsc_options_iname = '-pc_type -pc_hypre_type -pc_hypre_boomeramg_strong_threshold -pc_hypre_boomeramg_agg_nl -pc_hypre_boomeramg_agg_num_paths -pc_hypre_boomeramg_max_levels -pc_hypre_boomeramg_coarsen_type -pc_hypre_boomeramg_interp_type -pc_hypre_boomeramg_P_max -pc_hypre_boomeramg_truncfactor -ksp_gmres_restart'
+  petsc_options_value = 'hypre boomeramg 0.7 4 5 25 HMIS ext+i 2 0.3 200'
+  line_search = 'none'
+
+  automatic_scaling = true
+  compute_scaling_once = false
+  resid_vs_jac_scaling_param = 0.1
+
+  nl_abs_tol = 1e-8
+[]
+
 [Postprocessors]
-  [outlet_temperature]
-    type = ComponentBoundaryVariableValue
-    input = upper_plenum(out)
-    variable = temperature
+  [bnorm]
+    type = ElmIntegTotFissNtsPostprocessor
+    block = '10 11 15'
+    execute_on = linear
   []
-  [outlet_velocity]
-    type = ComponentBoundaryVariableValue
-    input = upper_plenum(out)
-    variable = velocity
+  [eigenvalue]
+    type = VectorPostprocessorComponent
+    vectorpostprocessor = eigenvalues
+    vector_name = eigen_values_real
+    index = 0
   []
-  [outlet_pressure]
-    type = ComponentBoundaryVariableValue
-    input = upper_plenum(out)
-    variable = pressure
+  [max_temp]
+    type = NodalExtremeValue
+    variable = T_solid
+    block = '0 1 2'
+    value_type = min
   []
-  [control_temperature]
-    type = ComponentBoundaryVariableValue
-    input = control_0(out)
-    variable = temperature
+  [total_heat]
+    type = ElmIntegTotFissHeatPostprocessor
+    block = '10 11 15'
+    execute_on = linear
   []
-  [control_velocity]
-    type = ComponentBoundaryVariableValue
-    input = control_0(out)
-    variable = velocity
-  []
-  [pipe_43_temperature]
-    type = ComponentBoundaryVariableValue
-    input = pipe_43(out)
-    variable = temperature
-  []
-  [pipe_43_velocity]
-    type = ComponentBoundaryVariableValue
-    input = pipe_43(out)
-    variable = velocity
+  [graphite_volume]
+    type = VolumePostprocessor
+    block = '0 1 2'
+    execute_on = initial
   []
 []
 
 [VectorPostprocessors]
-#  [temperature]
-#    type = NodalValueSampler
-#    variable = temperature
-#    sort_by = 'z'
-#    block = 'pipe1 pipe2 pipe3 pipe4'
-#    use_displaced_mesh = true
-#  []
-#  [pressure]
-#    type = NodalValueSampler
-#    variable = pressure
-#    sort_by = 'z'
-#    block = 'pipe1 pipe2 pipe3 pipe4'
-#    use_displaced_mesh = true
-#  []
-#  [velocity]
-#    type = NodalValueSampler
-#    variable = velocity
-#    sort_by = 'z'
-#    block = 'pipe1 pipe2 pipe3 pipe4'
-#    use_displaced_mesh = true
-#  []
-#  [density]
-#    type = NodalValueSampler
-#    variable = rho
-#    sort_by = 'z'
-#    block = 'pipe1 pipe2 pipe3 pipe4'
-#    use_displaced_mesh = true
-#  []
-#  [wall_temperature]
-#    type = NodalValueSampler
-#    variable = Tw
-#    sort_by = 'z'
-#    block = 'pipe1 pipe2 pipe3 pipe4'
-#    use_displaced_mesh = true
-#  []
+  [eigenvalues]
+    type = Eigenvalues
+    inverse_eigenvalue = true
+    outputs = console
+  []
 []
 
 [Outputs]
@@ -194,10 +262,9 @@
   [console]
     type = Console
   []
-  [out_displaced]
+  [out]
     type = Exodus
-    use_displaced = true
     execute_on = 'initial timestep_end'
-    sequence = false
+    discontinuous = true
   []
 []

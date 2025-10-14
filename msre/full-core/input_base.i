@@ -1,65 +1,150 @@
-[Mesh]
-  [graphite]
-    type = FileMeshGenerator
-    file = 'mesh_in.e'
-  []
-[]
-
-[Variables]
-  [T_solid]
-    family = LAGRANGE
-    order = SECOND
-    initial_condition = 900
-    scaling = 1e-6
+[GlobalParams]
+  global_init_P = 1.0e5
+  global_init_V = 0.25
+  global_init_T = 900
+  scaling_factor_var = '1 1e-3 1e-6'
+  [PBModelParams]
   []
 []
 
 [AuxVariables]
-  [h_wall]
-    family = LAGRANGE
-    order = SECOND
-    block = '0 2'
-    initial_condition = 1e3
+  [T_wall]
   []
-  [T_fluid]
-    family = LAGRANGE
-    order = SECOND
-    block = '0 2'
-    initial_condition = 900
+  [heat]
+  []
+  [neutron_source]
+  []
+  [delayed_neutron_source]
+  []
+[]
+
+[EOS]
+  [eos]
+    type = SaltEquationOfState
+  []
+[]
+
+[Components]
+  [inlet]
+    type = PBTDJ
+    input = 'lower_plenum(in)'
+    eos = eos
+  []
+  [lower_plenum]
+    type = PBOneDFluidComponent
+    eos = eos
+    orientation = '0 0 1'
+  []
+  [upper_plenum]
+    type = PBOneDFluidComponent
+    eos = eos
+    orientation = '0 0 1'
+  []
+  [lower_branch]
+    type = PBBranch
+    eos = eos
+  []
+  [upper_branch]
+    type = PBBranch
+    eos = eos
+  []
+  [outlet]
+    type = PBTDV
+    input = 'upper_plenum(out)'
+    eos = eos
+  []
+[]
+
+[ComponentInputParameters]
+  [pipe_input]
+    type = PBOneDFluidComponentParameters
+    eos = eos
+    orientation = '0 0 1'
   []
 []
 
 [Kernels]
-  [diffusion]
-    type = MatDiffusion
-    variable = T_solid
-    diffusivity = 'k'
+  [pre1_source]
+    type = CoupledForce
+    variable = pre1
+    v = neutron_source
   []
-  [source]
-    type = HeatSource
-    variable = T_solid
-    function = graphite_heat_func
+  [pre2_source]
+    type = CoupledForce
+    variable = pre2
+    v = neutron_source
+  []
+  [pre3_source]
+    type = CoupledForce
+    variable = pre3
+    v = neutron_source
+  []
+  [pre4_source]
+    type = CoupledForce
+    variable = pre4
+    v = neutron_source
+  []
+  [pre5_source]
+    type = CoupledForce
+    variable = pre5
+    v = neutron_source
+  []
+  [pre6_source]
+    type = CoupledForce
+    variable = pre6
+    v = neutron_source
+  []
+  [pre1_supg]
+    type = CoupledForceSUPG
+    variable = pre1
+    coupled_variable = neutron_source
+  []
+  [pre2_supg]
+    type = CoupledForceSUPG
+    variable = pre2
+    coupled_variable = neutron_source
+  []
+  [pre3_supg]
+    type = CoupledForceSUPG
+    variable = pre3
+    coupled_variable = neutron_source
+  []
+  [pre4_supg]
+    type = CoupledForceSUPG
+    variable = pre4
+    coupled_variable = neutron_source
+  []
+  [pre5_supg]
+    type = CoupledForceSUPG
+    variable = pre5
+    coupled_variable = neutron_source
+  []
+  [pre6_supg]
+    type = CoupledForceSUPG
+    variable = pre6
+    coupled_variable = neutron_source
   []
 []
 
-[Materials]
-  [graphite]
-    type = GenericConstantMaterial
-  []
-[]
-
-[BCs]
-  [wall]
-    type = CoupledConvectiveHeatFluxBC
-    variable = T_solid
-    htc = h_wall
-    T_infinity = T_fluid
+[AuxKernels]
+  [delayed_neutron]
+    type = ParsedAux
+    variable = delayed_neutron_source
+    coupled_variables = 'pre1 pre2 pre3 pre4 pre5 pre6'
+    expression = ''
   []
 []
 
 [Functions]
-  [graphite_heat_func]
+  [rho_func]
+    type = PiecewiseLinear
+  []
+  [mu_func]
+    type = PiecewiseLinear
+  []
+  [dt_func]
     type = ParsedFunction
+    expression = 'if(t<10, 1, 2)'
   []
 []
 
@@ -69,96 +154,264 @@
 [Preconditioning]
   [SMP_PJFNK]
     type = SMP
+    full = true
     solve_type = 'PJFNK'
-    petsc_options_iname = '-pc_type -pc_hypre_type -pc_hypre_boomeramg_strong_threshold -pc_hypre_boomeramg_agg_nl -pc_hypre_boomeramg_agg_num_paths -pc_hypre_boomeramg_max_levels -pc_hypre_boomeramg_coarsen_type -pc_hypre_boomeramg_interp_type -pc_hypre_boomeramg_P_max -pc_hypre_boomeramg_truncfactor -ksp_gmres_restart'
-    petsc_options_value = 'hypre boomeramg 0.7 4 5 25 HMIS ext+i 2 0.3 200'
-#    full = true
-#    petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
-#    petsc_options_value = 'lu superlu_dist'
+    petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
+    petsc_options_value = 'lu superlu_dist'
   []
 []
 
 [Executioner]
-#  type = Steady
   type = Transient
-  dt = 0.1
-  end_time = 10
+  end_time = 100
 
-#  petsc_options_iname = '-ksp_gmres_restart'
-#  petsc_options_value = '100'
+  steady_state_detection = true
+  steady_state_start_time = 10
 
-  nl_rel_tol = 1e-9
+  petsc_options_iname = '-ksp_gmres_restart'
+  petsc_options_value = '100'
+
+  nl_rel_tol = 1e-8
   nl_abs_tol = 1e-8
   nl_max_its = 20
 
   l_tol = 1e-4
   l_max_its = 100
 
+  auto_advance = true
   fixed_point_max_its = 20
-  fixed_point_rel_tol = 1e-9
-  fixed_point_abs_tol = 1e-8
+  fixed_point_rel_tol = 1e-7
+  fixed_point_abs_tol = 1e-6
 
   [Quadrature]
     type = TRAP
     order = FIRST
   []
-  transformed_variables = 'T_solid'
+  [TimeStepper]
+    type = FunctionDT
+    function = dt_func
+  []
 []
 
 [MultiApps]
   [sub]
-    type = TransientMultiApp
-    app_type = SamApp
+    type = FullSolveMultiApp
+    app_type = MoltresApp
+    library_path = '/work/10525/smpark3/ls6/projects/moltres/lib'
+#    library_path = '/home/smpark/projects/moltres-sam/lib'
     positions = '0 0 0'
     input_files = 'input_sub.i'
     execute_on = timestep_end
-#    max_procs_per_app = 32
+    keep_solution_during_restore = true
+    keep_aux_solution_during_restore = true
   []
 []
 
 [Transfers]
-  [T_wall_to_sub]
+  [T_fluid_to_sub_boundaries]
     type = MultiAppGeneralFieldNearestLocationTransfer
     to_multi_app = sub
-    source_variable = T_solid
-    variable = T_wall
-    from_blocks = '2'
-    num_nearest_points = 40
-    displaced_target_mesh = true
-    search_value_conflicts = false
-  []
-  [T_fluid_from_sub]
-    type = MultiAppGeneralFieldNearestLocationTransfer
-    from_multi_app = sub
     source_variable = temperature
-    variable = T_fluid
+    variable = T_wall_fluid
     displaced_source_mesh = true
     search_value_conflicts = false
   []
-  [T_fluid_from_sub_control_channel]
+  [T_fluid_to_sub_boundaries_control_channel]
     type = MultiAppGeneralFieldNearestLocationTransfer
-    from_multi_app = sub
+    to_multi_app = sub
     source_variable = temperature
-    variable = T_fluid
+    variable = T_wall_fluid
     displaced_source_mesh = true
-    to_boundaries = '244'
-    from_blocks = 'pipe_44'
+    to_boundaries = '30000 30001 30002 30003'
+    from_blocks = 'pipe_30000 pipe_30001 pipe_30002 pipe_30003'
     search_value_conflicts = false
   []
-  [h_wall_from_sub]
+  [T_fluid_to_sub_block]
     type = MultiAppGeneralFieldNearestLocationTransfer
-    from_multi_app = sub
+    to_multi_app = sub
+    source_variable = temperature
+    variable = temperature
+    displaced_source_mesh = true
+    search_value_conflicts = false
+  []
+  [T_fluid_to_sub_block_control_channel]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = temperature
+    variable = temperature
+    displaced_source_mesh = true
+    to_blocks = '30000 30001 30002 30003'
+    from_blocks = 'pipe_30000 pipe_30001 pipe_30002 pipe_30003'
+    search_value_conflicts = false
+  []
+  [T_plenum_to_sub_block_plenum]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = temperature
+    variable = temperature
+    displaced_source_mesh = true
+    to_blocks = '3 4 5 6'
+    from_blocks = 'lower_plenum upper_plenum'
+    search_value_conflicts = false
+  []
+  [h_wall_to_sub]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
     source_variable = heat_transfer_coefficient
     variable = h_wall
     displaced_source_mesh = true
     search_value_conflicts = false
   []
+  [h_wall_to_sub_control_channel]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = heat_transfer_coefficient
+    variable = h_wall
+    displaced_source_mesh = true
+    to_boundaries = '30000 30001 30002 30003'
+    from_blocks = 'pipe_30000 pipe_30001 pipe_30002 pipe_30003'
+    search_value_conflicts = false
+  []
+  [delayed_neutron_to_sub]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = delayed_neutron_source
+    variable = delayed_neutron_source
+    displaced_source_mesh = true
+    search_value_conflicts = false
+  []
+  [delayed_neutron_to_sub_control_channel]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = delayed_neutron_source
+    variable = delayed_neutron_source
+    displaced_source_mesh = true
+    to_blocks = '30000 30001 30002 30003'
+    from_blocks = 'pipe_30000 pipe_30001 pipe_30002 pipe_30003'
+    search_value_conflicts = false
+  []
+  [delayed_neutron_to_sub_plenum]
+    type = MultiAppGeneralFieldNearestLocationTransfer
+    to_multi_app = sub
+    source_variable = delayed_neutron_source
+    variable = delayed_neutron_source
+    displaced_source_mesh = true
+    to_blocks = '3 4 5 6'
+    from_blocks = 'lower_plenum upper_plenum'
+    search_value_conflicts = false
+  []
+  [heat_from_sub_lower_plenum]
+    type = MultiAppGeneralFieldUserObjectTransfer
+    from_multi_app = sub
+    source_user_object = heat_uo_lower_plenum
+    variable = heat
+    displaced_target_mesh = true
+    to_blocks = lower_plenum
+    search_value_conflicts = false
+  []
+  [heat_from_sub_upper_plenum]
+    type = MultiAppGeneralFieldUserObjectTransfer
+    from_multi_app = sub
+    source_user_object = heat_uo_upper_plenum
+    variable = heat
+    displaced_target_mesh = true
+    to_blocks = upper_plenum
+    search_value_conflicts = false
+  []
+  [neutron_source_from_sub_lower_plenum]
+    type = MultiAppGeneralFieldUserObjectTransfer
+    from_multi_app = sub
+    source_user_object = nt_source_uo_lower_plenum
+    variable = neutron_source
+    displaced_target_mesh = true
+    to_blocks = lower_plenum
+    search_value_conflicts = false
+  []
+  [neutron_source_from_sub_upper_plenum]
+    type = MultiAppGeneralFieldUserObjectTransfer
+    from_multi_app = sub
+    source_user_object = nt_source_uo_upper_plenum
+    variable = neutron_source
+    displaced_target_mesh = true
+    to_blocks = upper_plenum
+    search_value_conflicts = false
+  []
 []
 
 [Postprocessors]
+  [outlet_temperature]
+    type = ComponentBoundaryVariableValue
+    input = upper_plenum(out)
+    variable = temperature
+  []
+  [outlet_velocity]
+    type = ComponentBoundaryVariableValue
+    input = upper_plenum(out)
+    variable = velocity
+  []
+  [outlet_pressure]
+    type = ComponentBoundaryVariableValue
+    input = upper_plenum(out)
+    variable = pressure
+  []
+  [control_temperature]
+    type = ComponentBoundaryVariableValue
+    input = pipe_30000(out)
+    variable = temperature
+  []
+  [control_velocity]
+    type = ComponentBoundaryVariableValue
+    input = pipe_30000(out)
+    variable = velocity
+  []
+  [pipe_10000_temperature]
+    type = ComponentBoundaryVariableValue
+    input = pipe_10000(out)
+    variable = temperature
+  []
+  [pipe_10000_velocity]
+    type = ComponentBoundaryVariableValue
+    input = pipe_10000(out)
+    variable = velocity
+  []
 []
 
 [VectorPostprocessors]
+#  [temperature]
+#    type = NodalValueSampler
+#    variable = temperature
+#    sort_by = 'z'
+#    block = 'pipe1 pipe2 pipe3 pipe4'
+#    use_displaced_mesh = true
+#  []
+#  [pressure]
+#    type = NodalValueSampler
+#    variable = pressure
+#    sort_by = 'z'
+#    block = 'pipe1 pipe2 pipe3 pipe4'
+#    use_displaced_mesh = true
+#  []
+#  [velocity]
+#    type = NodalValueSampler
+#    variable = velocity
+#    sort_by = 'z'
+#    block = 'pipe1 pipe2 pipe3 pipe4'
+#    use_displaced_mesh = true
+#  []
+#  [density]
+#    type = NodalValueSampler
+#    variable = rho
+#    sort_by = 'z'
+#    block = 'pipe1 pipe2 pipe3 pipe4'
+#    use_displaced_mesh = true
+#  []
+#  [wall_temperature]
+#    type = NodalValueSampler
+#    variable = Tw
+#    sort_by = 'z'
+#    block = 'pipe1 pipe2 pipe3 pipe4'
+#    use_displaced_mesh = true
+#  []
 []
 
 [Outputs]

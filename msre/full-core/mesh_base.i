@@ -1,15 +1,13 @@
 # pitch = 5.08
 radius = 0.508e-2
 inch = 2.54e-2
-lower_plenum_height = 0.1875
-core_height = 1.70027
 # ratio = 1.016
 
 [Mesh]
   # Unit cell
   [circle_cell]
     type = CartesianConcentricCircleAdaptiveBoundaryMeshGenerator
-    num_sectors_per_side = '4 4 4 4'
+    num_sectors_per_side = '2 2 2 2'
     ring_radii = '${radius}'
     ring_intervals = '1'
     ring_block_ids = '11'
