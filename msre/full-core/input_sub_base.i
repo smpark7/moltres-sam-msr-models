@@ -122,7 +122,7 @@
 [Materials]
   [graphite]
     type = MoltresJsonMaterial
-    base_file = 'openmc/xs-data/msre_si.json'
+    base_file = '../openmc/xs-data/msre_si.json'
     material_key = 'graphite'
     block = '0 1 2'
     interp_type = 'linear'
@@ -132,7 +132,7 @@
   []
   [salt]
     type = MoltresJsonMaterial
-    base_file = 'openmc/xs-data/msre_si.json'
+    base_file = '../openmc/xs-data/msre_si.json'
     material_key = 'fuel'
     block = '10 11 15'
     interp_type = 'linear'
@@ -141,7 +141,7 @@
   []
   [plenum]
     type = MoltresJsonMaterial
-    base_file = 'openmc/xs-data/msre_si.json'
+    base_file = '../openmc/xs-data/msre_si.json'
     material_key = 'fuel'
     block = '3 4 5 6'
     interp_type = 'linear'
@@ -165,7 +165,7 @@
     type = LayeredAverage
     variable = heat
     direction = z
-    num_layers = 19
+    num_layers = 75
     block = '3 4'
     execute_on = 'initial timestep_end'
     sample_type = direct
@@ -174,7 +174,7 @@
     type = LayeredAverage
     variable = heat
     direction = z
-    num_layers = 25
+    num_layers = 102
     block = '5 6'
     execute_on = 'initial timestep_end'
     sample_type = direct
@@ -183,7 +183,7 @@
     type = LayeredAverage
     variable = neutron_source
     direction = z
-    num_layers = 19
+    num_layers = 75
     block = '3 4'
     execute_on = 'initial timestep_end'
     sample_type = direct
@@ -192,7 +192,7 @@
     type = LayeredAverage
     variable = neutron_source
     direction = z
-    num_layers = 25
+    num_layers = 102
     block = '5 6'
     execute_on = 'initial timestep_end'
     sample_type = direct
@@ -215,7 +215,7 @@
   compute_scaling_once = false
   resid_vs_jac_scaling_param = 0.1
 
-  nl_abs_tol = 1e-8
+  nl_abs_tol = 1e-6
 []
 
 [Postprocessors]

@@ -3,6 +3,7 @@
   global_init_V = 0.25
   global_init_T = 900
   scaling_factor_var = '1 1e-3 1e-6'
+  p_order = 2
   [PBModelParams]
   []
 []
@@ -57,6 +58,11 @@
 
 [ComponentInputParameters]
   [pipe_input]
+    type = PBOneDFluidComponentParameters
+    eos = eos
+    orientation = '0 0 1'
+  []
+  [control_input]
     type = PBOneDFluidComponentParameters
     eos = eos
     orientation = '0 0 1'
@@ -144,7 +150,7 @@
   []
   [dt_func]
     type = ParsedFunction
-    expression = 'if(t<10, 1, 2)'
+    expression = 'if(t<1, 0.2, 2)'
   []
 []
 
@@ -156,8 +162,10 @@
     type = SMP
     full = true
     solve_type = 'PJFNK'
-    petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
-    petsc_options_value = 'lu superlu_dist'
+#    petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
+#    petsc_options_value = 'lu superlu_dist'
+    petsc_options_iname = '-pc_type'
+    petsc_options_value = 'ilu'
   []
 []
 
@@ -169,14 +177,14 @@
   steady_state_start_time = 10
 
   petsc_options_iname = '-ksp_gmres_restart'
-  petsc_options_value = '100'
+  petsc_options_value = '200'
 
   nl_rel_tol = 1e-8
   nl_abs_tol = 1e-8
   nl_max_its = 20
 
   l_tol = 1e-4
-  l_max_its = 100
+  l_max_its = 200
 
   auto_advance = true
   fixed_point_max_its = 20
@@ -223,7 +231,7 @@
     variable = T_wall_fluid
     displaced_source_mesh = true
     to_boundaries = '30000 30001 30002 30003'
-    from_blocks = 'pipe_30000 pipe_30001 pipe_30002 pipe_30003'
+    from_blocks = 'control_0 control_1 control_2 control_3'
     search_value_conflicts = false
   []
   [T_fluid_to_sub_block]
@@ -241,7 +249,7 @@
     variable = temperature
     displaced_source_mesh = true
     to_blocks = '30000 30001 30002 30003'
-    from_blocks = 'pipe_30000 pipe_30001 pipe_30002 pipe_30003'
+    from_blocks = 'control_0 control_1 control_2 control_3'
     search_value_conflicts = false
   []
   [T_plenum_to_sub_block_plenum]
@@ -269,7 +277,7 @@
     variable = h_wall
     displaced_source_mesh = true
     to_boundaries = '30000 30001 30002 30003'
-    from_blocks = 'pipe_30000 pipe_30001 pipe_30002 pipe_30003'
+    from_blocks = 'control_0 control_1 control_2 control_3'
     search_value_conflicts = false
   []
   [delayed_neutron_to_sub]
@@ -287,7 +295,7 @@
     variable = delayed_neutron_source
     displaced_source_mesh = true
     to_blocks = '30000 30001 30002 30003'
-    from_blocks = 'pipe_30000 pipe_30001 pipe_30002 pipe_30003'
+    from_blocks = 'control_0 control_1 control_2 control_3'
     search_value_conflicts = false
   []
   [delayed_neutron_to_sub_plenum]
@@ -356,12 +364,12 @@
   []
   [control_temperature]
     type = ComponentBoundaryVariableValue
-    input = pipe_30000(out)
+    input = control_0(out)
     variable = temperature
   []
   [control_velocity]
     type = ComponentBoundaryVariableValue
-    input = pipe_30000(out)
+    input = control_0(out)
     variable = velocity
   []
   [pipe_10000_temperature]
