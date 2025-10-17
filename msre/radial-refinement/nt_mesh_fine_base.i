@@ -11,7 +11,7 @@ inch = 2.54e-2
     ring_radii = '${radius}'
     ring_intervals = '1'
     ring_block_ids = '11'
-    background_intervals = '2'
+    background_intervals = '4'
     square_size = '${fparse inch * sqrt(2 * (0.6 ^ 2))}'
     preserve_volumes = true
     quad_element_type = QUAD8
@@ -341,33 +341,33 @@ inch = 2.54e-2
     input = stitch_4
     block = '13 14'
   []
-  # Extrude to 3D
-  [extrude]
-    type = AdvancedExtruderGenerator
-    input = remove_thimble
-    heights = '1.70027'
-    num_layers = '1'
-    direction = '0 0 1'
-#    bottom_boundary = 5
-#    top_boundary = 6
-  []
-#  [transform_up]
-#    type = TransformGenerator
-#    input = extrude
-#    transform = TRANSLATE
-#    vector_value = '0 0 0.1875'
+#  # Extrude to 3D
+#  [extrude]
+#    type = AdvancedExtruderGenerator
+#    input = remove_thimble
+#    heights = '1.70027'
+#    num_layers = '1'
+#    direction = '0 0 1'
+##    bottom_boundary = 5
+##    top_boundary = 6
 #  []
-  [graphite_bounds]
-    type = SideSetsBetweenSubdomainsGenerator
-    input = extrude
-    new_boundary = 100
-    primary_block = '0 2'
-    paired_block = '10 11 15'
-  []
-  [cleanup]
-    type = RenameBoundaryGenerator
-    input = graphite_bounds
-    old_boundary = 5
-    new_boundary = 101
-  []
+##  [transform_up]
+##    type = TransformGenerator
+##    input = extrude
+##    transform = TRANSLATE
+##    vector_value = '0 0 0.1875'
+##  []
+#  [graphite_bounds]
+#    type = SideSetsBetweenSubdomainsGenerator
+#    input = extrude
+#    new_boundary = 100
+#    primary_block = '0 2'
+#    paired_block = '10 11 15'
+#  []
+#  [cleanup]
+#    type = RenameBoundaryGenerator
+#    input = graphite_bounds
+#    old_boundary = 5
+#    new_boundary = 101
+#  []
 []
