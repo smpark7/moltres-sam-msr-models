@@ -7,11 +7,12 @@ inch = 2.54e-2
   # Unit cell
   [circle_cell]
     type = CartesianConcentricCircleAdaptiveBoundaryMeshGenerator
-    num_sectors_per_side = '6 6 6 6'
+    num_sectors_per_side = '8 8 8 8'
     ring_radii = '${radius}'
-    ring_intervals = '1'
-    ring_block_ids = '11'
+    ring_intervals = '4'
+    ring_block_ids = '11 100'
     background_intervals = '4'
+    background_block_ids = '2'
     square_size = '${fparse inch * sqrt(2 * (0.6 ^ 2))}'
     preserve_volumes = true
     quad_element_type = QUAD8
@@ -48,8 +49,8 @@ inch = 2.54e-2
     dim = 2
     dx = '${fparse 0.4 * inch} ${fparse 0.4 * inch} ${fparse 0.4 * inch}'
     dy = '${fparse 0.8 * inch}'
-    ix = '2 2 2'
-    iy = '4'
+    ix = '4 8 4'
+    iy = '8'
     subdomain_id = '0 10 0'
   []
   [second_order]
@@ -77,8 +78,9 @@ inch = 2.54e-2
   [square_cell]
     type = PolygonConcentricCircleMeshGenerator
     num_sides = 4
-    num_sectors_per_side = '4 4 4 4'
-    background_intervals = 2
+    num_sectors_per_side = '8 8 8 8'
+    background_intervals = 4
+    background_block_ids = '1 101'
     polygon_size = ${fparse inch * 0.4}
     quad_element_type = QUAD8
     tri_element_type = TRI6
@@ -129,8 +131,8 @@ inch = 2.54e-2
   [rename_blocks]
     type = RenameBlockGenerator
     input = stitch
-    old_block = '0'
-    new_block = '2'
+    old_block = '0 100'
+    new_block = '2 10'
   []
   [delete_bounds]
     type = BoundaryDeletionGenerator
@@ -212,9 +214,17 @@ inch = 2.54e-2
     bottom_left = '${fparse -sqrt(2) * inch} ${fparse -sqrt(2) * inch} 0'
     top_right= '${fparse sqrt(2) * inch} ${fparse sqrt(2) * inch} 0'
   []
+  [highlight_center_4]
+    type = SubdomainBoundingBoxGenerator
+    input = highlight_center_3
+    block_id = 4
+    restricted_subdomains = '101'
+    bottom_left = '${fparse -inch} ${fparse -inch} 0'
+    top_right= '${fparse inch} ${fparse inch} 0'
+  []
   [delete_center]
     type = BlockDeletionGenerator
-    input = highlight_center_3
+    input = highlight_center_4
     block = '3 4'
     new_boundary = 1001
   []
@@ -237,9 +247,9 @@ inch = 2.54e-2
   []
   [control_cell]
     type = CartesianConcentricCircleAdaptiveBoundaryMeshGenerator
-    num_sectors_per_side = '14 14 14 14'
+    num_sectors_per_side = '24 24 24 24'
     ring_radii = '${fparse inch-0.1651e-2} ${inch} 3.1992e-2'
-    ring_intervals = '1 1 2'
+    ring_intervals = '1 1 4'
     ring_block_ids = '13 14 15'
     background_intervals = '1'
     square_size = '${fparse inch * sqrt(2) * 2}'
@@ -271,7 +281,7 @@ inch = 2.54e-2
     input_mesh_2 = left_half_2
     boundary_1 = 1001
     boundary_2 = 5
-    num_layers = 2
+    num_layers = 4
     keep_inputs = false
     use_quad_elements = true
   []
@@ -281,7 +291,7 @@ inch = 2.54e-2
     input_mesh_2 = right_half_2
     boundary_1 = 1001
     boundary_2 = 5
-    num_layers = 2
+    num_layers = 4
     keep_inputs = false
     use_quad_elements = true
   []
@@ -329,16 +339,15 @@ inch = 2.54e-2
     clear_stitched_boundary_ids = true
     verbose_stitching = true
   []
-#  # Rename salt blocks
-#  [rename_fuel]
-#    type = RenameBlockGenerator
-#    input = stitch_4
-#    old_block = '10 11'
-#    new_block = '3 4'
-#  []
+  [rename_101]
+    type = RenameBlockGenerator
+    input = stitch_4
+    old_block = '101'
+    new_block = '2'
+  []
   [remove_thimble]
     type = BlockDeletionGenerator
-    input = stitch_4
+    input = rename_101
     block = '13 14'
   []
 #  # Extrude to 3D

@@ -239,7 +239,7 @@ inch = 2.54e-2
     type = CartesianConcentricCircleAdaptiveBoundaryMeshGenerator
     num_sectors_per_side = '6 6 6 6'
     ring_radii = '${fparse inch-0.1651e-2} ${inch} 3.1992e-2'
-    ring_intervals = '1 1 2'
+    ring_intervals = '1 1 1'
     ring_block_ids = '13 14 15'
     background_intervals = '1'
     square_size = '${fparse inch * sqrt(2) * 2}'
@@ -271,7 +271,7 @@ inch = 2.54e-2
     input_mesh_2 = left_half_2
     boundary_1 = 1001
     boundary_2 = 5
-    num_layers = 2
+    num_layers = 1
     keep_inputs = false
     use_quad_elements = true
   []
@@ -281,7 +281,7 @@ inch = 2.54e-2
     input_mesh_2 = right_half_2
     boundary_1 = 1001
     boundary_2 = 5
-    num_layers = 2
+    num_layers = 1
     keep_inputs = false
     use_quad_elements = true
   []
