@@ -148,6 +148,15 @@
     prop_names = 'k cp rho'
     prop_values = '10.1 2386 2327.5'
   []
+  [vessel]
+    type = MoltresJsonMaterial
+    base_file = '../openmc/xs-data/msre_si.json'
+    material_key = 'inor'
+    block = '7'
+    interp_type = 'linear'
+    prop_names = 'k cp rho'
+    prop_values = '21.9656 577.778 8774.5'
+  []
 []
 
 [BCs]
