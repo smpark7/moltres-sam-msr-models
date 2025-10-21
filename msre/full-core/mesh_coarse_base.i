@@ -9,7 +9,7 @@ core_height = 1.70027
   # Unit cell
   [circle_cell]
     type = CartesianConcentricCircleAdaptiveBoundaryMeshGenerator
-    num_sectors_per_side = '2 2 2 2'
+    num_sectors_per_side = '4 4 4 4'
     ring_radii = '${radius}'
     ring_intervals = '1'
     ring_block_ids = '11'
@@ -281,9 +281,9 @@ core_height = 1.70027
   []
   [control_cell]
     type = CartesianConcentricCircleAdaptiveBoundaryMeshGenerator
-    num_sectors_per_side = '6 6 6 6'
+    num_sectors_per_side = '10 10 10 10'
     ring_radii = '${fparse inch-0.1651e-2} ${inch} 3.1992e-2'
-    ring_intervals = '1 1 1'
+    ring_intervals = '1 1 2'
     ring_block_ids = '13 14 15'
     background_intervals = '1'
     square_size = '${fparse inch * sqrt(2) * 2}'

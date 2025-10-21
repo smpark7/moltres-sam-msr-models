@@ -40,7 +40,7 @@ def main(mesh_base_file='mesh_coarse_base.i', mesh_file='mesh_coarse.i'):
         root, func=lambda n: n.fullpath == '/Mesh/extrude')
     extrude['heights'] = \
         f"'{lower_plenum_height} {core_height} {upper_plenum_height}'"
-    extrude['num_layers'] = "'4 34 5'"
+    extrude['num_layers'] = "'4 5 5'"
     extrude['subdomain_swaps'] = \
         "'0 3 1 4 2 3 10 3 11 4 15 3; ; 0 5 1 6 2 5 10 5 11 6 15 5'"
 
