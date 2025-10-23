@@ -50,9 +50,10 @@ def main(input_base_file='input_base.i', input_file='input.i',
     wetted_perimeter = (2 * pi * fuel_channel_r) + 2 * fuel_channel_a
     hydraulic_diameter = (4 * flow_area) / wetted_perimeter
 
-    control_channel_Dh = (control_channel_outer_r - control_channel_inner_r) * 2
-    control_channel_A = pi * (
-            control_channel_outer_r ** 2 - control_channel_inner_r ** 2)
+    control_channel_Dh = \
+        (control_channel_outer_r - control_channel_inner_r) * 2
+    control_channel_A = \
+        pi * (control_channel_outer_r ** 2 - control_channel_inner_r ** 2)
     control_channel_Ph = 2 * pi * control_channel_outer_r
 
     # Read base input file
@@ -122,7 +123,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
     lower_plenum['orientation'] = "'0 0 1'"
     lower_plenum['position'] = "'0 0 0'"
     lower_plenum['length'] = lower_plenum_height
-    lower_plenum['n_elems'] = 4 * 8
+    lower_plenum['n_elems'] = 4
     lower_plenum['heat_source_var'] = 'heat'
 
     # Upper plenum
@@ -133,7 +134,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
     upper_plenum['orientation'] = "'0 0 1'"
     upper_plenum['position'] = f"'0 0 {lower_plenum_height+core_height}'"
     upper_plenum['length'] = upper_plenum_height
-    upper_plenum['n_elems'] = 5 * 8
+    upper_plenum['n_elems'] = 6
     upper_plenum['heat_source_var'] = 'heat'
 
     # Grid data
@@ -174,7 +175,7 @@ def main(input_base_file='input_base.i', input_file='input.i',
                 pipe['input_parameters'] = 'pipe_input'
             pipe['position'] = f"'{x_pos} {y_pos} {lower_plenum_height}'"
             pipe['length'] = core_height
-            pipe['n_elems'] = 34 * 8
+            pipe['n_elems'] = 20
             # pipe['scalar_source_var'] = "'pre1_source pre2_source pre3_source pre4_source pre5_source pre6_source'"
 
             heat_transfer_name = 'heat_flux_' + str(i) + str(j)

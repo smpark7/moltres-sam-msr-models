@@ -4,3 +4,6 @@
 *.h5
 *.xml
 *.csv
+*.xda
+*.out
+**/__pycache__/

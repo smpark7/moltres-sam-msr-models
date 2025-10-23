@@ -178,11 +178,6 @@
   l_tol = 1e-4
   l_max_its = 100
 
-  auto_advance = true
-  fixed_point_max_its = 20
-  fixed_point_rel_tol = 1e-7
-  fixed_point_abs_tol = 1e-6
-
   [Quadrature]
     type = TRAP
     order = FIRST
@@ -228,6 +223,10 @@
     type = ComponentBoundaryVariableValue
     input = pipe_43(out)
     variable = velocity
+  []
+  [residual_pp]
+    type = Residual
+    residual_type = INITIAL
   []
 []
 

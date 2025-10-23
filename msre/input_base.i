@@ -3,12 +3,15 @@
   global_init_V = 0.25
   global_init_T = 900
   scaling_factor_var = '1 1e-3 1e-6'
+  p_order = 2
   [PBModelParams]
   []
 []
 
 [AuxVariables]
   [T_wall]
+    family = LAGRANGE
+    order = SECOND
   []
   [heat]
   []
@@ -184,8 +187,8 @@
   fixed_point_abs_tol = 1e-6
 
   [Quadrature]
-    type = TRAP
-    order = FIRST
+    type = SIMPSON
+    order = SECOND
   []
   [TimeStepper]
     type = FunctionDT

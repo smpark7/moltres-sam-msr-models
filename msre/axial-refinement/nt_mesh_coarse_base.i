@@ -14,7 +14,7 @@ inch = 2.54e-2
     background_intervals = '1'
     square_size = '${fparse inch * sqrt(2 * (0.6 ^ 2))}'
     preserve_volumes = true
-    quad_element_type = QUAD8
+    quad_element_type = QUAD9
     tri_element_type = TRI6
   []
   [top_right]
@@ -55,7 +55,7 @@ inch = 2.54e-2
   [second_order]
     type = ElementOrderConversionGenerator
     input = center
-    conversion_type = SECOND_ORDER_NONFULL
+    conversion_type = SECOND_ORDER
   []
   [rename_boundary]
     type = RenameBoundaryGenerator
@@ -80,7 +80,7 @@ inch = 2.54e-2
     num_sectors_per_side = '2 2 2 2'
     background_intervals = 1
     polygon_size = ${fparse inch * 0.4}
-    quad_element_type = QUAD8
+    quad_element_type = QUAD9
     tri_element_type = TRI6
   []
   [top]
@@ -320,7 +320,7 @@ inch = 2.54e-2
   [second_order_2]
     type = ElementOrderConversionGenerator
     input = rename_block
-    conversion_type = SECOND_ORDER_NONFULL
+    conversion_type = SECOND_ORDER
   []
   [stitch_4]
     type = StitchedMeshGenerator

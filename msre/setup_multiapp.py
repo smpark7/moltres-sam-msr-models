@@ -251,10 +251,10 @@ def main(input_main_base='input_main_base.i', input_main='input_main.i',
                 if i not in [44, 45, 54, 55]]
     boundary = ' '.join(boundary)
     T_fluid_boundaries_transfer = moosetree.find(
-        main_root, func=lambda n:n.fullpath == '/Transfers/T_fluid_to_sub_boundaries')
+        main_root, func=lambda n:n.fullpath == '/Transfers/T_fluid_to_moltres_boundaries')
     T_fluid_boundaries_transfer['to_boundaries'] = "'" + boundary + "'"
     h_wall_transfer = moosetree.find(
-        main_root, func=lambda n:n.fullpath == '/Transfers/h_wall_to_sub')
+        main_root, func=lambda n:n.fullpath == '/Transfers/h_wall_to_moltres')
     h_wall_transfer['to_boundaries'] = "'" + boundary + "'"
 
     # BCs
@@ -297,13 +297,14 @@ def main(input_main_base='input_main_base.i', input_main='input_main.i',
             T_wall_uo['execute_on'] = "'initial timestep_end'"
             T_wall_uo['sample_type'] = 'direct'
 
-            T_wall_transfer_name = 'T_wall_from_sub_' + str(i) + str(j)
+            T_wall_transfer_name = 'T_wall_to_sam_' + str(i) + str(j)
             transfers.append(T_wall_transfer_name)
             T_wall_transfer = moosetree.find(
                 main_root,
                 func=lambda n: n.fullpath == '/Transfers/' + T_wall_transfer_name)
             T_wall_transfer['type'] = 'MultiAppGeneralFieldUserObjectTransfer'
-            T_wall_transfer['from_multi_app'] = 'sub'
+            T_wall_transfer['from_multi_app'] = 'moltres'
+            T_wall_transfer['to_multi_app'] = 'sam'
             T_wall_transfer['source_user_object'] = T_wall_uo_name
             T_wall_transfer['variable'] = 'T_wall'
             T_wall_transfer['displaced_target_mesh'] = 'true'
@@ -327,13 +328,14 @@ def main(input_main_base='input_main_base.i', input_main='input_main.i',
             heat_uo['execute_on'] = "'initial timestep_end'"
             heat_uo['sample_type'] = 'direct'
 
-            heat_transfer_name = 'heat_from_sub_' + str(i) + str(j)
+            heat_transfer_name = 'heat_to_sam_' + str(i) + str(j)
             transfers.append(heat_transfer_name)
             heat_transfer = moosetree.find(
                 main_root,
                 func=lambda n: n.fullpath == '/Transfers/' + heat_transfer_name)
             heat_transfer['type'] = 'MultiAppGeneralFieldUserObjectTransfer'
-            heat_transfer['from_multi_app'] = 'sub'
+            heat_transfer['from_multi_app'] = 'moltres'
+            heat_transfer['to_multi_app'] = 'sam'
             heat_transfer['source_user_object'] = heat_uo_name
             heat_transfer['variable'] = 'heat'
             heat_transfer['displaced_target_mesh'] = 'true'
@@ -357,13 +359,14 @@ def main(input_main_base='input_main_base.i', input_main='input_main.i',
             nt_source_uo['execute_on'] = "'initial timestep_end'"
             nt_source_uo['sample_type'] = 'direct'
 
-            nt_source_transfer_name = 'neutron_source_from_sub_' + str(i) + str(j)
+            nt_source_transfer_name = 'neutron_source_to_sam_' + str(i) + str(j)
             transfers.append(nt_source_transfer_name)
             nt_source_transfer = moosetree.find(
                 main_root,
                 func=lambda n: n.fullpath == '/Transfers/' + nt_source_transfer_name)
             nt_source_transfer['type'] = 'MultiAppGeneralFieldUserObjectTransfer'
-            nt_source_transfer['from_multi_app'] = 'sub'
+            nt_source_transfer['from_multi_app'] = 'moltres'
+            nt_source_transfer['to_multi_app'] = 'sam'
             nt_source_transfer['source_user_object'] = nt_source_uo_name
             nt_source_transfer['variable'] = 'neutron_source'
             nt_source_transfer['displaced_target_mesh'] = 'true'
@@ -405,11 +408,11 @@ def main(input_main_base='input_main_base.i', input_main='input_main.i',
     blocks_2 = "'" + blocks_2 + "'"
     T_fluid_blocks_transfer = moosetree.find(
         main_root,
-        func=lambda n: n.fullpath == '/Transfers/T_fluid_to_sub_block')
+        func=lambda n: n.fullpath == '/Transfers/T_fluid_to_moltres_block')
     T_fluid_blocks_transfer['to_blocks'] = blocks_2
     delayed_neutron_transfer = moosetree.find(
         main_root,
-        func=lambda n: n.fullpath == '/Transfers/delayed_neutron_to_sub')
+        func=lambda n: n.fullpath == '/Transfers/delayed_neutron_to_moltres')
     delayed_neutron_transfer['to_blocks'] = blocks_2
 
     for k in range(1, 7):
